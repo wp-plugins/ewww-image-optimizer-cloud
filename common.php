@@ -11,7 +11,7 @@ if (preg_match('/get_current_user/', $disabled)) {
 /**
  * Constants
  */
-define('EWWW_IMAGE_OPTIMIZER_VERSION', '175.2');
+define('EWWW_IMAGE_OPTIMIZER_VERSION', '176.2');
 $ewww_debug .= 'EWWW IO version: ' . EWWW_IMAGE_OPTIMIZER_VERSION . '<br>';
 // this is the full system path to the plugin folder
 define('EWWW_IMAGE_OPTIMIZER_PLUGIN_PATH', plugin_dir_path(__FILE__));
@@ -282,7 +282,7 @@ function ewww_image_optimizer_ims() {
 			'fields' => 'ids'
 	        ));
 		// we need to strip the excess data since we only want IDs
-		$galleries = ewww_image_optimizer_clean_attachments($galleries);
+//		$galleries = ewww_image_optimizer_clean_attachments($galleries);
 		sort($galleries, SORT_NUMERIC);
 		$gallery_string = implode(',', $galleries);
 		echo "<p>" . __('Choose a gallery or', EWWW_IMAGE_OPTIMIZER_DOMAIN) . " <a href='upload.php?page=ewww-image-optimizer-bulk&ids=$gallery_string'>" . __('optimize all galleries', EWWW_IMAGE_OPTIMIZER_DOMAIN) . "</a></p>";
@@ -297,7 +297,7 @@ function ewww_image_optimizer_ims() {
 					'fields' => 'ids'
 		                ));
 				// we need to strip the excess data from attachments, since we only want the attachment IDs
-				$attachments = ewww_image_optimizer_clean_attachments($attachments);
+//				$attachments = ewww_image_optimizer_clean_attachments($attachments);
 				$image_count = sizeof($attachments);
 				$image_string = implode(',', $attachments);
 				$gallery_name = get_the_title($gid);
@@ -318,7 +318,7 @@ function ewww_image_optimizer_ims() {
 				'fields' => 'ids'
 	                ));
 			// we need to strip the excess data from attachments, since we only want the attachment IDs
-			$attachments = ewww_image_optimizer_clean_attachments($attachments);
+//			$attachments = ewww_image_optimizer_clean_attachments($attachments);
 			sort($attachments, SORT_NUMERIC);
 			$image_string = implode(',', $attachments);
 			echo "<p><a href='upload.php?page=ewww-image-optimizer-bulk&ids=$image_string'>" . __('Optimize Gallery', EWWW_IMAGE_OPTIMIZER_DOMAIN) . "</a></p>";
@@ -1126,7 +1126,7 @@ function ewww_image_optimizer_attachment_path($meta, $ID) {
 }
 
 // takes an array of attachment info and strips out extra fields
-function ewww_image_optimizer_clean_attachments ($attachments) {
+/*function ewww_image_optimizer_clean_attachments ($attachments) {
 	// the 'fields' option was added in 3.1, so (in older versions) we need to strip 
 	// the excess data from attachments, since we only want the attachment IDs
 	global $wp_version;
@@ -1141,7 +1141,7 @@ function ewww_image_optimizer_clean_attachments ($attachments) {
 		$attachments = $new_attachments;
 	}
 	return $attachments;
-}
+}*/
 
 // generate a unique filename for a converted image
 function ewww_image_optimizer_unique_filename ($file, $fileext) {
