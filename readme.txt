@@ -1,7 +1,7 @@
 === EWWW Image Optimizer Cloud ===
 Contributors: nosilver4u
 Tags: images, image, attachments, attachment, optimize, optimization, nextgen, buddypress, flagallery, flash-gallery, lossless, photos, photo, picture, pictures, seo, compression, image-store, imstore, slider, image editor, gmagick, wp-symposium, meta-slider, metaslider, cloud
-Requires at least: 3.3
+Requires at least: 3.5
 Tested up to: 3.8
 Stable tag: 1.7.6
 License: GPLv3
