@@ -15,20 +15,12 @@ $my_version = substr($wp_version, 0, 3);
 $ewww_debug .= "WP version: $wp_version<br>";
 
 /**
- * Constants
- */
-define('EWWW_IMAGE_OPTIMIZER_VERSION', '176.2');
-$ewww_debug .= 'EWWW IO version: ' . EWWW_IMAGE_OPTIMIZER_VERSION . '<br>';
-// this is the full system path to the plugin folder
-define('EWWW_IMAGE_OPTIMIZER_PLUGIN_PATH', plugin_dir_path(__FILE__));
-
-/**
  * Hooks
  */
 add_filter('wp_generate_attachment_metadata', 'ewww_image_optimizer_resize_from_meta_data', 60, 2);
 add_filter('manage_media_columns', 'ewww_image_optimizer_columns');
 // variable for plugin settings link
-$plugin = plugin_basename (__FILE__);
+$plugin = plugin_basename (EWWW_IMAGE_OPTIMIZER_PLUGIN_FILE);
 add_filter("plugin_action_links_$plugin", 'ewww_image_optimizer_settings_link');
 add_action('manage_media_custom_column', 'ewww_image_optimizer_custom_column', 10, 2);
 add_action('admin_init', 'ewww_image_optimizer_admin_init');
@@ -44,11 +36,11 @@ add_action('admin_action_-1', 'ewww_image_optimizer_bulk_action_handler');
 add_action('admin_enqueue_scripts', 'ewww_image_optimizer_media_scripts');
 add_action('ewww_image_optimizer_auto', 'ewww_image_optimizer_auto');
 add_filter('wp_image_editors', 'ewww_image_optimizer_load_editor', 60);
-register_deactivation_hook(__FILE__, 'ewww_image_optimizer_network_deactivate');
+register_deactivation_hook(EWWW_IMAGE_OPTIMIZER_PLUGIN_FILE, 'ewww_image_optimizer_network_deactivate');
 
 // require the files that does the bulk processing
-require(dirname(__FILE__) . '/bulk.php');
-require(dirname(__FILE__) . '/aux-optimize.php');
+require(EWWW_IMAGE_OPTIMIZER_PLUGIN_PATH . 'bulk.php');
+require(EWWW_IMAGE_OPTIMIZER_PLUGIN_PATH . 'aux-optimize.php');
 
 // need to include the plugin library for the is_plugin_active function (even though it isn't supposed to be necessary in the admin)
 //require_once(ABSPATH . 'wp-admin/includes/plugin.php');
@@ -210,7 +202,7 @@ function ewww_image_optimizer_network_admin_menu() {
 			'EWWW Image Optimizer',			//Title
 			'EWWW Image Optimizer',			//Sub-menu title
 			'manage_network_options',		//Security
-			__FILE__,				//File to open
+			EWWW_IMAGE_OPTIMIZER_PLUGIN_FILE,				//File to open
 			'ewww_image_optimizer_options'	//Function to call
 		);
 		add_action('admin_footer-' . $ewww_network_options_page, 'ewww_image_optimizer_debug');
@@ -242,7 +234,7 @@ function ewww_image_optimizer_admin_menu() {
 			'EWWW Image Optimizer',		//Title
 			'EWWW Image Optimizer',		//Sub-menu title
 			'manage_options',		//Security
-			__FILE__,			//File to open
+			EWWW_IMAGE_OPTIMIZER_PLUGIN_FILE,			//File to open
 			'ewww_image_optimizer_options'	//Function to call
 		);
 		add_action('admin_footer-' . $ewww_options_page, 'ewww_image_optimizer_debug');
