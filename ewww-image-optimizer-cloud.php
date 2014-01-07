@@ -143,22 +143,6 @@ function ewww_image_optimizer_admin_init() {
 			restore_current_blog();
 		}
 	}
-	// include the file that loads the nextgen gallery optimization functions
-	if (is_plugin_active('nextgen-gallery/nggallery.php') || (function_exists('is_plugin_active_for_network') && is_plugin_active_for_network('nextgen-gallery/nggallery.php'))) {
-		$plugin_dir = str_replace('ewww-image-optimizer-cloud/', '', EWWW_IMAGE_OPTIMIZER_PLUGIN_PATH);
-		$nextgen_data = get_plugin_data($plugin_dir . 'nextgen-gallery/nggallery.php', false, false);
-			$ewww_debug .= 'Nextgen version: ' . $nextgen_data['Version'] . '<br>';
-		if (preg_match('/^2\./', $nextgen_data['Version'])) { // for Nextgen 2
-			require(EWWW_IMAGE_OPTIMIZER_PLUGIN_PATH . 'nextgen2-integration.php');
-		} else {
-			require(EWWW_IMAGE_OPTIMIZER_PLUGIN_PATH . 'nextgen-integration.php');
-		}
-	}
-
-	// include the file that loads the grand flagallery optimization functions
-	if (is_plugin_active('flash-album-gallery/flag.php') || (function_exists('is_plugin_active_for_network') && is_plugin_active_for_network('flash-album-gallery/flag.php')))
-		require( EWWW_IMAGE_OPTIMIZER_PLUGIN_PATH . 'flag-integration.php' );
-
 	add_action('admin_enqueue_scripts', 'ewww_image_optimizer_progressbar_style');
 }
 

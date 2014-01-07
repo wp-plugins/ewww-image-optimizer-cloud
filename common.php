@@ -42,10 +42,25 @@ register_deactivation_hook(EWWW_IMAGE_OPTIMIZER_PLUGIN_FILE, 'ewww_image_optimiz
 require(EWWW_IMAGE_OPTIMIZER_PLUGIN_PATH . 'bulk.php');
 require(EWWW_IMAGE_OPTIMIZER_PLUGIN_PATH . 'aux-optimize.php');
 
-// need to include the plugin library for the is_plugin_active function (even though it isn't supposed to be necessary in the admin)
-//require_once(ABSPATH . 'wp-admin/includes/plugin.php');
+// need to include the plugin library for the is_plugin_active function
+require_once(ABSPATH . 'wp-admin/includes/plugin.php');
+// include the file that loads the nextgen gallery optimization functions
+if (is_plugin_active('nextgen-gallery/nggallery.php') || (function_exists('is_plugin_active_for_network') && is_plugin_active_for_network('nextgen-gallery/nggallery.php'))) {
+//	$plugin_dir = str_replace('ewww-image-optimizer/', '', EWWW_IMAGE_OPTIMIZER_PLUGIN_PATH);
+	$nextgen_data = get_plugin_data(trailingslashit(WP_PLUGIN_DIR) . 'nextgen-gallery/nggallery.php', false, false);
+		$ewww_debug .= 'Nextgen version: ' . $nextgen_data['Version'] . '<br>';
+	if (preg_match('/^2\./', $nextgen_data['Version'])) { // for Nextgen 2
+		require(EWWW_IMAGE_OPTIMIZER_PLUGIN_PATH . 'nextgen2-integration.php');
+	} else {
+		require(EWWW_IMAGE_OPTIMIZER_PLUGIN_PATH . 'nextgen-integration.php');
+	}
+}
 
-// TODO: we need to move all is_plugin_active() calls into the init area where they belong, whoops...
+// include the file that loads the grand flagallery optimization functions
+if (is_plugin_active('flash-album-gallery/flag.php') || (function_exists('is_plugin_active_for_network') && is_plugin_active_for_network('flash-album-gallery/flag.php'))) {
+	require( EWWW_IMAGE_OPTIMIZER_PLUGIN_PATH . 'flag-integration.php' );
+}
+
 // sets all the tool constants to false
 function ewww_image_optimizer_disable_tools() {
 	global $ewww_debug;
