@@ -46,7 +46,6 @@ require(EWWW_IMAGE_OPTIMIZER_PLUGIN_PATH . 'aux-optimize.php');
 require_once(ABSPATH . 'wp-admin/includes/plugin.php');
 // include the file that loads the nextgen gallery optimization functions
 if (is_plugin_active('nextgen-gallery/nggallery.php') || (function_exists('is_plugin_active_for_network') && is_plugin_active_for_network('nextgen-gallery/nggallery.php'))) {
-//	$plugin_dir = str_replace('ewww-image-optimizer/', '', EWWW_IMAGE_OPTIMIZER_PLUGIN_PATH);
 	$nextgen_data = get_plugin_data(trailingslashit(WP_PLUGIN_DIR) . 'nextgen-gallery/nggallery.php', false, false);
 		$ewww_debug .= 'Nextgen version: ' . $nextgen_data['Version'] . '<br>';
 	if (preg_match('/^2\./', $nextgen_data['Version'])) { // for Nextgen 2
@@ -210,7 +209,7 @@ function ewww_image_optimizer_network_deactivate($network_wide) {
 
 // adds a global settings page to the network admin settings menu
 function ewww_image_optimizer_network_admin_menu() {
-	if (function_exists('is_plugin_active_for_network') && is_plugin_active_for_network('ewww-image-optimizer/ewww-image-optimizer.php')) {
+	if (function_exists('is_plugin_active_for_network') && is_plugin_active_for_network(plugin_basename(EWWW_IMAGE_OPTIMIZER_PLUGIN_FILE))) {
 		// add options page to the settings menu
 		$ewww_network_options_page = add_submenu_page(
 			'settings.php',				//slug of parent
@@ -243,7 +242,7 @@ function ewww_image_optimizer_admin_menu() {
 		$ewww_symposium_optimize_page = add_media_page(__('Optimize WP Symposium Images', EWWW_IMAGE_OPTIMIZER_DOMAIN), __('WP Symposium Optimize', EWWW_IMAGE_OPTIMIZER_DOMAIN), 'install_themes', 'ewww-image-optimizer-symposium-images', 'ewww_image_optimizer_aux_images');
 		add_action('admin_footer-' . $ewww_symposium_optimize_page, 'ewww_image_optimizer_debug');
 	}
-	if (!function_exists('is_plugin_active_for_network') || !is_plugin_active_for_network('ewww-image-optimizer/ewww-image-optimizer.php')) { 
+	if (!function_exists('is_plugin_active_for_network') || !is_plugin_active_for_network(plugin_basename(EWWW_IMAGE_OPTIMIZER_PLUGIN_FILE))) { 
 		// add options page to the settings menu
 		$ewww_options_page = add_options_page(
 			'EWWW Image Optimizer',		//Title
@@ -369,7 +368,7 @@ function ewww_image_optimizer_debug_log() {
 // adds a link on the Plugins page for the EWWW IO settings
 function ewww_image_optimizer_settings_link($links) {
 	// load the html for the settings link
-	$settings_link = '<a href="options-general.php?page=ewww-image-optimizer/ewww-image-optimizer.php">' . __('Settings', EWWW_IMAGE_OPTIMIZER_DOMAIN) . '</a>';
+	$settings_link = '<a href="options-general.php?page=' . plugin_basename(EWWW_IMAGE_OPTIMIZER_PLUGIN_FILE) . '">' . __('Settings', EWWW_IMAGE_OPTIMIZER_DOMAIN) . '</a>';
 	// load the settings link into the plugin links array
 	array_unshift($links, $settings_link);
 	// send back the plugin links array
@@ -1366,7 +1365,7 @@ function ewww_image_optimizer_bulk_action_handler() {
 
 // retrieve an option: use 'site' setting if plugin is network activated, otherwise use 'blog' setting
 function ewww_image_optimizer_get_option ($option_name) {
-	if (function_exists('is_plugin_active_for_network') && is_plugin_active_for_network('ewww-image-optimizer/ewww-image-optimizer.php')) {
+	if (function_exists('is_plugin_active_for_network') && is_plugin_active_for_network(plugin_basename(EWWW_IMAGE_OPTIMIZER_PLUGIN_FILE))) {
 		$option_value = get_site_option($option_name);
 	} else {
 		$option_value = get_option($option_name);

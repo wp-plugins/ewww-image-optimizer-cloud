@@ -107,6 +107,7 @@ That's not a question, but since I made it up, I'll answer it. See the Image Opt
 * fixed: Optimize More was using case-insensitive queries for matching paths
 * fixed: Optimize More was unable to record image sizes over 8388607 bytes
 * removed: obsolete jquery 1.9.1 file used for maintaining backwards compatiblity with really old versions of WP
+* fixed: weirdness with paths preventing Windows servers from activating, and cleanup of plugin path code
 
 = 1.7.5 =
 * new version of gifsicle (1.78), for more detail, see http://www.lcdf.org/gifsicle/changes.html
