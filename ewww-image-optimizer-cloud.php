@@ -21,7 +21,7 @@ define('EWWW_IMAGE_OPTIMIZER_DOMAIN', 'ewww-image-optimizer-cloud');
 define('EWWW_IMAGE_OPTIMIZER_PLUGIN_FILE', __FILE__);
 // this is the full system path to the plugin folder
 define('EWWW_IMAGE_OPTIMIZER_PLUGIN_PATH', plugin_dir_path(__FILE__));
-define('EWWW_IMAGE_OPTIMIZER_VERSION', '176.2');
+define('EWWW_IMAGE_OPTIMIZER_VERSION', '176.36');
 
 require_once(EWWW_IMAGE_OPTIMIZER_PLUGIN_PATH . 'common.php');
 
@@ -89,6 +89,10 @@ function ewww_image_optimizer_admin_init() {
 			update_site_option('ewww_image_optimizer_aux_paths', ewww_image_optimizer_aux_paths_sanitize($_POST['ewww_image_optimizer_aux_paths']));
 			if (empty($_POST['ewww_image_optimizer_enable_cloudinary'])) $_POST['ewww_image_optimizer_enable_cloudinary'] = '';
 			update_site_option('ewww_image_optimizer_enable_cloudinary', $_POST['ewww_image_optimizer_enable_cloudinary']);
+			if (empty($_POST['ewww_image_optimizer_delay'])) $_POST['ewww_image_optimizer_delay'] = '';
+			update_site_option('ewww_image_optimizer_delay', intval($_POST['ewww_image_optimizer_delay']));
+			if (empty($_POST['ewww_image_optimizer_interval'])) $_POST['ewww_image_optimizer_interval'] = '';
+			update_site_option('ewww_image_optimizer_interval', intval($_POST['ewww_image_optimizer_interval']));
 			add_action('network_admin_notices', 'ewww_image_optimizer_network_settings_saved');
 		}
 	}
@@ -114,6 +118,8 @@ function ewww_image_optimizer_admin_init() {
 	register_setting('ewww_image_optimizer_options', 'ewww_image_optimizer_auto');
 	register_setting('ewww_image_optimizer_options', 'ewww_image_optimizer_aux_paths', 'ewww_image_optimizer_aux_paths_sanitize');
 	register_setting('ewww_image_optimizer_options', 'ewww_image_optimizer_enable_cloudinary');
+	register_setting('ewww_image_optimizer_options', 'ewww_image_optimizer_delay', 'intval');
+	register_setting('ewww_image_optimizer_options', 'ewww_image_optimizer_interval', 'intval');
 	// setup scheduled optimization if the user has enabled it, and it isn't already scheduled
 	if (ewww_image_optimizer_get_option('ewww_image_optimizer_auto') == TRUE && !wp_next_scheduled('ewww_image_optimizer_auto')) {
 		$ewww_debug .= "scheduling auto-optimization<br>";
@@ -143,7 +149,14 @@ function ewww_image_optimizer_admin_init() {
 			restore_current_blog();
 		}
 	}
-	add_action('admin_enqueue_scripts', 'ewww_image_optimizer_progressbar_style');
+	// require the files that do the bulk processing 
+	require_once(EWWW_IMAGE_OPTIMIZER_PLUGIN_PATH . 'bulk.php'); 
+	require_once(EWWW_IMAGE_OPTIMIZER_PLUGIN_PATH . 'aux-optimize.php'); 
+	// queue the function that contains custom styling for our progressbars, but only in wp 3.8+ 
+	global $wp_version; 
+	if ( substr($wp_version, 0, 3) >= 3.8 ) {  
+		add_action('admin_enqueue_scripts', 'ewww_image_optimizer_progressbar_style'); 
+	}
 }
 
 // check the mimetype of the given file ($path) with various methods
@@ -200,7 +213,7 @@ function ewww_image_optimizer_mimetype($path, $case) {
  * @param   boolean $converted		tells us if this is a resize and the full image was converted to a new format
  * @returns array
  */
-function ewww_image_optimizer($file, $gallery_type, $converted, $resize) {
+function ewww_image_optimizer($file, $gallery_type, $converted, $new) {
 	global $ewww_debug;
 	$ewww_debug .= "<b>ewww_image_optimizer()</b><br>";
 	// if the plugin gets here without initializing, we need to run through some things first
@@ -208,6 +221,7 @@ function ewww_image_optimizer($file, $gallery_type, $converted, $resize) {
 		ewww_image_optimizer_init();
 	// initialize the original filename 
 	$original = $file;
+	$result = '';
 	// check that the file exists
 	if (FALSE === file_exists($file)) {
 		// tell the user we couldn't find the file
@@ -267,6 +281,7 @@ function ewww_image_optimizer($file, $gallery_type, $converted, $resize) {
 	}
 	// get the original image size
 	$orig_size = filesize($file);
+	$ewww_debug .= "original filesize: $orig_size<br>";
 	// initialize $new_size with the original size
 	$new_size = $orig_size;
 	// set the optimization process to OFF
@@ -293,14 +308,21 @@ function ewww_image_optimizer($file, $gallery_type, $converted, $resize) {
 				$convert = false;
 				$pngfile = '';
 			}
+			// check for previous optimization, so long as the force flag is on and this isn't a new image that needs converting
+			if ( empty( $_REQUEST['force'] ) && ! ( $new && $convert ) ) {
+				if ( $results_msg = ewww_image_optimizer_check_table( $file, $orig_size ) ) {
+					return array( $file, $results_msg, $converted, $original );
+				}
+			}
 			if (ewww_image_optimizer_get_option('ewww_image_optimizer_cloud_jpg')) {
-				list($file, $converted, $result) = ewww_image_optimizer_cloud_optimizer($file, $type, $convert, $pngfile, 'image/png');
+				list($file, $converted, $result, $new_size) = ewww_image_optimizer_cloud_optimizer($file, $type, $convert, $pngfile, 'image/png');
 				if ($converted) $converted = $filenum;
 			}
 			break;
 		case 'image/png':
 			// png2jpg conversion is turned on, and the image is in the wordpress media library
 			if (((ewww_image_optimizer_get_option('ewww_image_optimizer_png_to_jpg') && $gallery_type == 1) || !empty($_GET['convert'])) && (!ewww_image_optimizer_png_alpha($file) || ewww_image_optimizer_jpg_background())) {
+				$ewww_debug .= "PNG to JPG conversion turned on<br>";
 				// if the user set a fill background for transparency
 				$background = '';
 				if ($background = ewww_image_optimizer_jpg_background()) {
@@ -335,6 +357,7 @@ function ewww_image_optimizer($file, $gallery_type, $converted, $resize) {
 					list($jpgfile, $filenum) = ewww_image_optimizer_unique_filename($file, '.jpg');
 				}
 			} else {
+				$ewww_debug .= "PNG to JPG conversion turned off<br>";
 				// turn the conversion process OFF
 				$convert = false;
 				$jpgfile = '';
@@ -343,10 +366,16 @@ function ewww_image_optimizer($file, $gallery_type, $converted, $resize) {
 				$b = null;
 				$gquality = null;
 			}
+			// check for previous optimization, so long as the force flag is on and this isn't a new image that needs converting
+			if ( empty( $_REQUEST['force'] ) && ! ( $new && $convert ) ) {
+				if ( $results_msg = ewww_image_optimizer_check_table( $file, $orig_size ) ) {
+					return array( $file, $results_msg, $converted, $original );
+				}
+			}
 			// retrieve the filesize of the original image
 			//$orig_size = filesize($file);
 			if (ewww_image_optimizer_get_option('ewww_image_optimizer_cloud_png')) {
-				list($file, $converted, $result) = ewww_image_optimizer_cloud_optimizer($file, $type, $convert, $jpgfile, 'image/jpeg', array('r' => $r, 'g' => $g, 'b' => $b, 'quality' => $gquality));
+				list($file, $converted, $result, $new_size) = ewww_image_optimizer_cloud_optimizer($file, $type, $convert, $jpgfile, 'image/jpeg', array('r' => $r, 'g' => $g, 'b' => $b, 'quality' => $gquality));
 				if ($converted) $converted = $filenum;
 			}
 			break;
@@ -368,8 +397,14 @@ function ewww_image_optimizer($file, $gallery_type, $converted, $resize) {
 				$convert = false;
 				$pngfile = '';
 			}
+			// check for previous optimization, so long as the force flag is on and this isn't a new image that needs converting
+			if ( empty( $_REQUEST['force'] ) && ! ( $new && $convert ) ) {
+				if ( $results_msg = ewww_image_optimizer_check_table( $file, $orig_size ) ) {
+					return array( $file, $results_msg, $converted, $original );
+				}
+			}
 			if (ewww_image_optimizer_get_option('ewww_image_optimizer_cloud_gif')) {
-				list($file, $converted, $result) = ewww_image_optimizer_cloud_optimizer($file, $type, $convert, $pngfile, 'image/png');
+				list($file, $converted, $result, $new_size) = ewww_image_optimizer_cloud_optimizer($file, $type, $convert, $pngfile, 'image/png');
 				if ($converted) $converted = $filenum;
 			}
 			break;
@@ -381,8 +416,12 @@ function ewww_image_optimizer($file, $gallery_type, $converted, $resize) {
 	if ($result == 'exceeded') {
 		return array($file, __('License exceeded', EWWW_IMAGE_OPTIMIZER_DOMAIN), $converted, $original);
 	}
+	if (!empty($new_size)) {
+		$results_msg = ewww_image_optimizer_update_table ($file, $new_size, $orig_size);
+		return array($file, $results_msg, $converted, $original);
+	}
 	// if the image is unchanged
-	if ($result == 'unchanged') {
+/*	if ($result == 'unchanged') {
 		// tell the user we couldn't save them anything
 		return array($file, __('No savings', EWWW_IMAGE_OPTIMIZER_DOMAIN), $converted, $original);
 	}
@@ -405,7 +444,7 @@ function ewww_image_optimizer($file, $gallery_type, $converted, $resize) {
 			$savings_str);
 		// send back the filename, the results, and the $converted flag
 		return array($file, $results_msg, $converted, $original);
-	}
+	}*/
 	// otherwise, send back the filename, the results (some sort of error message), the $converted flag, and the name of the original image
 	return array($file, $result, $converted, $original);
 }
@@ -425,7 +464,7 @@ function ewww_image_optimizer_options () {
 		<a href="http://wordpress.org/extend/plugins/ewww-image-optimizer-cloud/installation/"><?php _e('Installation Instructions', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?></a> | 
 		<a href="http://wordpress.org/support/plugin/ewww-image-optimizer-cloud"><?php _e('Plugin Support', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?></a> | 
 		<a href="http://stats.pingdom.com/w89y81bhecp4"><?php _e('Cloud Status', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?></a></p>
-		<p>I recommend hosting your Wordpress site with <a href=http://www.dreamhost.com/r.cgi?132143">Dreamhost.com</a> or <a href="http://www.bluehost.com/track/nosilver4u">Bluehost.com</a> (referral links).</p>
+		<p><?php printf(__('New images uploaded to the Media Library will be optimized automatically. If you have existing images you would like to optimize, you can use the %s tool.', EWWW_IMAGE_OPTIMIZER_DOMAIN), '<a href="upload.php?page=ewww-image-optimizer-bulk">' . __('Bulk Optimize', EWWW_IMAGE_OPTIMIZER_DOMAIN) . '</a>'); ?></p>
 		<div id="status" style="border: 1px solid #ccc; padding: 0 8px; border-radius: 12px;">
 			<h3>Plugin Status</h3>
 			<?php
@@ -482,11 +521,13 @@ function ewww_image_optimizer_options () {
 			<h3><?php _e('General Settings', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?></h3>
 			<table class="form-table">
 				<tr><th><label for="ewww_image_optimizer_debug"><?php _e('Debugging', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?></label></th><td><input type="checkbox" id="ewww_image_optimizer_debug" name="ewww_image_optimizer_debug" value="true" <?php if (ewww_image_optimizer_get_option('ewww_image_optimizer_debug') == TRUE) { ?>checked="true"<?php } ?> /> <?php _e('Use this to provide information for support purposes, or if you feel comfortable digging around in the code to fix a problem you are experiencing.', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?></td></tr>
-				<tr><th><label for="ewww_image_optimizer_auto"><?php _e('Scheduled optimization', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?></label></th><td><input type="checkbox" id="ewww_image_optimizer_auto" name="ewww_image_optimizer_auto" value="true" <?php if (ewww_image_optimizer_get_option('ewww_image_optimizer_auto') == TRUE) { ?>checked="true"<?php } ?> /> <?php _e('This will enable scheduled optimization of images for your theme, buddypress, and any additional folders you have configured below. Runs hourly: wp_cron only runs when your site is visited, so it may be even longer between optimizations.', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?></td></tr>
+				<tr><th><label for="ewww_image_optimizer_auto"><?php _e('Scheduled optimization', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?></label></th><td><input type="checkbox" id="ewww_image_optimizer_auto" name="ewww_image_optimizer_auto" value="true" <?php if (ewww_image_optimizer_get_option('ewww_image_optimizer_auto') == TRUE) { ?>checked="true"<?php } ?> /> <?php _e('This will enable scheduled optimization of unoptimized images for your theme, buddypress, and any additional folders you have configured below. Runs hourly: wp_cron only runs when your site is visited, so it may be even longer between optimizations.', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?></td></tr>
 				<tr><th><label for="ewww_image_optimizer_aux_paths"><?php _e('Folders to optimize', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?></label></th><td><?php printf(__('One path per line, must be within %s. Use full paths, not relative paths.', EWWW_IMAGE_OPTIMIZER_DOMAIN), ABSPATH); ?><br />
 					<textarea id="ewww_image_optimizer_aux_paths" name="ewww_image_optimizer_aux_paths" rows="3" cols="60"><?php if ($aux_paths = ewww_image_optimizer_get_option('ewww_image_optimizer_aux_paths')) { foreach ($aux_paths as $path) echo "$path\n"; } ?></textarea>
 					<p class="description">Provide paths containing images to be optimized using scheduled optimization or 'Optimize More' in the Tools menu.<br>
 					<b><a href="http://wordpress.org/support/plugin/ewww-image-optimizer-cloud"><?php _e('Please submit a support request in the forums to have folders created by a particular plugin auto-included in the future.', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?></a></b></p></td></tr>
+				<tr><th><label for="ewww_image_optimizer_delay"><?php _e('Bulk Delay', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?></label></th><td><input type="text" id="ewww_image_optimizer_delay" name="ewww_image_optimizer_delay" size="5" value="<?php echo ewww_image_optimizer_get_option('ewww_image_optimizer_delay'); ?>"> <?php _e('Choose how long to pause between images (in seconds, 0 = disabled)', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?></td></tr>
+				<!--                <tr><th><label for="ewww_image_optimizer_interval"><?php _e('Image Batch Size', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?></label></th><td><input type="text" id="ewww_image_optimizer_interval" name="ewww_image_optimizer_interval" size="5" value="<?php echo ewww_image_optimizer_get_option('ewww_image_optimizer_interval'); ?>"> <?php _e('Choose how many images should be processed before each delay', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?></td></tr>-->
 <?php	if (class_exists('Cloudinary') && Cloudinary::config_get("api_secret")) { ?>
 				<tr><th><label for="ewww_image_optimizer_enable_cloudinary"><?php _e('Automatic Cloudinary upload', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?></label></th><td><input type="checkbox" id="ewww_image_optimizer_enable_cloudinary" name="ewww_image_optimizer_enable_cloudinary" value="true" <?php if (ewww_image_optimizer_get_option('ewww_image_optimizer_enable_cloudinary') == TRUE) { ?>checked="true"<?php } ?> /> <?php _e('When enabled, uploads to the Media Library will be transferred to Cloudinary after optimization. Cloudinary generates resizes, so only the full-size image is uploaded.', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?></td></tr>
 <?php	} ?>
@@ -516,6 +557,7 @@ function ewww_image_optimizer_options () {
 			</table>
 			<p class="submit"><input type="submit" class="button-primary" value="<?php _e('Save Changes', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?>" /></p>
 		</form>
+		<p>I recommend hosting your Wordpress site with <a href=http://www.dreamhost.com/r.cgi?132143">Dreamhost.com</a> or <a href="http://www.bluehost.com/track/nosilver4u">Bluehost.com</a> (referral links).</p>
 	</div>
 	<?php
 }
