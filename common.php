@@ -593,20 +593,26 @@ function ewww_image_optimizer_delete ($id) {
 		$esql = "SELECT ID, post_content FROM $wpdb->posts WHERE post_content LIKE '%$filename%'";
 		$rows = $wpdb->get_row($esql);
 		// if the original file still exists and no posts contain links to the image
-		if (file_exists($file_path) && empty($rows))
+		if (file_exists($file_path) && empty($rows)) {
 			unlink($file_path);
+			$wpdb->delete($wpdb->ewwwio_images, array('path' => $file_path));
+		}
 	}
+	// remove the regular image from the ewwwio_images tables
+	list($file_path, $upload_path) = ewww_image_optimizer_attachment_path($meta, $id);
+	$wpdb->delete($wpdb->ewwwio_images, array('path' => $file_path));
 	// resized versions, so we can continue
 	if (isset($meta['sizes']) ) {
 		// if the full-size didn't have an original image, so $file_path isn't set
-		if(empty($file_path)) {
+/*		if(empty($file_path)) {
 			// get the filepath
 			list($file_path, $upload_path) = ewww_image_optimizer_attachment_path($meta, $id);
-		}
+		}*/
 		// one way or another, $file_path is now set, and we can get the base folder name
 		$base_dir = dirname($file_path) . '/';
 		// check each resized version
 		foreach($meta['sizes'] as $size => $data) {
+			$wpdb->delete($wpdb->ewwwio_images, array('path' => $base_dir . $data['file']));
 			// if the original resize is set, and still exists
 			if (!empty($data['orig_file']) && file_exists($base_dir . $data['orig_file'])) {
 				unset($srows);
@@ -618,6 +624,7 @@ function ewww_image_optimizer_delete ($id) {
 				// if there are no posts containing links to the original, delete it
 				if(empty($srows)) {
 					unlink($base_dir . $data['orig_file']);
+					$wpdb->delete($wpdb->ewwwio_images, array('path' => $base_dir . $data['orig_file']));
 				}
 			}
 		}
@@ -639,7 +646,7 @@ function ewww_image_optimizer_cloud_verify() {
 		update_option('ewww_image_optimizer_cloud_gif', '');
 		return false;
 	}
-	$servers = gethostbynamel('optimize.exactlywww.com');
+	$servers = gethostbynamel('optimize3.exactlywww.com');
 	foreach ($servers as $ip) {
 		$url = "http://$ip/";
 		$result = wp_remote_post($url, array(
@@ -843,14 +850,17 @@ function ewww_image_optimizer_check_table ($file, $orig_size) {
 }
 
 // receives a path, results, optimized size, and an original size to insert into ewwwwio_images table
-function ewww_image_optimizer_update_table ($attachment, $opt_size, $orig_size) {
+// if this is a $new image, copy the result stored in the database
+function ewww_image_optimizer_update_table ($attachment, $opt_size, $orig_size, $preserve_results = false) {
 	global $wpdb;
 	global $ewww_debug;
 	$ewww_debug .= "<b>ewww_image_optimizer_update_table()</b><br>";
-	$query = $wpdb->prepare("SELECT id,orig_size FROM $wpdb->ewwwio_images WHERE BINARY path = %s", $attachment);
+	$query = $wpdb->prepare("SELECT id,orig_size,results FROM $wpdb->ewwwio_images WHERE BINARY path = %s", $attachment);
 	$already_optimized = $wpdb->get_row($query, ARRAY_A);
 	$ewww_debug .= "savings: $opt_size (new) vs. $orig_size (orig)<br>";
-	if ($opt_size == $orig_size) {
+	if (!empty($already_optimized['results']) && $preserve_results && $opt_size === $orig_size) {
+		$results_msg = $already_optimized['results'];
+	} elseif ($opt_size === $orig_size) {
 		$ewww_debug .= "original and new file are same size, no savings<br>";
 		$results_msg = __('No savings', EWWW_IMAGE_OPTIMIZER_DOMAIN);
 	} else {

@@ -267,7 +267,7 @@ function ewww_image_optimizer($file, $gallery_type, $converted, $new) {
 		// strip the file extension
 		$filename = str_replace($fileext[0], '', $file);
 		// grab the dimensions
-		preg_match('/-\d+x\d+$/', $filename, $fileresize);
+		preg_match('/-\d+x\d+(-\d+)*$/', $filename, $fileresize);
 		// strip the dimensions
 		$filename = str_replace($fileresize[0], '', $filename);
 		// reconstruct the filename with the same increment (stored in $converted) as the full version
@@ -417,7 +417,7 @@ function ewww_image_optimizer($file, $gallery_type, $converted, $new) {
 		return array($file, __('License exceeded', EWWW_IMAGE_OPTIMIZER_DOMAIN), $converted, $original);
 	}
 	if (!empty($new_size)) {
-		$results_msg = ewww_image_optimizer_update_table ($file, $new_size, $orig_size);
+		$results_msg = ewww_image_optimizer_update_table ($file, $new_size, $orig_size, $new);
 		return array($file, $results_msg, $converted, $original);
 	}
 	// if the image is unchanged
