@@ -634,6 +634,7 @@ function ewww_image_optimizer_delete ($id) {
 
 // submits the api key for verification
 function ewww_image_optimizer_cloud_verify() {
+	// TODO: implement some caching of the IP and results, with a 24-hour expiration, and an override parameter
 	global $ewww_debug;
 	$ewww_debug .= "<b>ewww_image_optimizer_cloud_verify()</b><br>";
 	$api_key = ewww_image_optimizer_get_option('ewww_image_optimizer_cloud_key');
@@ -647,28 +648,33 @@ function ewww_image_optimizer_cloud_verify() {
 		return false;
 	}
 	$servers = gethostbynamel('optimize.exactlywww.com');
-	foreach ($servers as $ip) {
-		$url = "http://$ip/";
-		$result = wp_remote_post($url, array(
-			'timeout' => 20,
-			'body' => array('api_key' => $api_key)
-		));
-		if (is_wp_error($result)) {
-			$error_message = $result->get_error_message();
-			$ewww_debug .= "verification failed: $error_message <br>";
-		} elseif (!empty($result['body']) && preg_match('/(great|exceeded)/', $result['body'])) {
-			$verified = $result['body'];
-			if (!defined('EWWW_IMAGE_OPTIMIZER_CLOUD_IP')) {
-				define('EWWW_IMAGE_OPTIMIZER_CLOUD_IP', $ip);
+	if ( empty ( $servers ) ) {
+		$ewww_debug .= "unable to resolve servers<br>";
+		return false;
+	} else {
+		foreach ($servers as $ip) {
+			$url = "http://$ip/";
+			$result = wp_remote_post($url, array(
+				'timeout' => 20,
+				'body' => array('api_key' => $api_key)
+			));
+			if (is_wp_error($result)) {
+				$error_message = $result->get_error_message();
+				$ewww_debug .= "verification failed: $error_message <br>";
+			} elseif (!empty($result['body']) && preg_match('/(great|exceeded)/', $result['body'])) {
+				$verified = $result['body'];
+					if (!defined('EWWW_IMAGE_OPTIMIZER_CLOUD_IP')) {
+					define('EWWW_IMAGE_OPTIMIZER_CLOUD_IP', $ip);
+				}
+				$ewww_debug .= "verification success via: $ip <br>";
+				if ( preg_match ( '/exceeded/', $result['body']) ) {
+					global $ewww_exceed;
+					$ewww_exceed = true;
+				}
+				break;
+			} else {
+				$ewww_debug .= "verification failed via: $ip <br>" . print_r($result, true) . "<br>";
 			}
-			$ewww_debug .= "verification success via: $ip <br>";
-			if ( preg_match ( '/exceeded/', $result['body']) ) {
-				global $ewww_exceed;
-				$ewww_exceed = true;
-			}
-			break;
-		} else {
-			$ewww_debug .= "verification failed via: $ip <br>" . print_r($result, true) . "<br>";
 		}
 	}
 	if (empty($verified)) {
