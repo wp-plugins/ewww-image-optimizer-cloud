@@ -81,6 +81,10 @@ function ewww_image_optimizer_admin_init() {
 			update_site_option('ewww_image_optimizer_cloud_jpg', $_POST['ewww_image_optimizer_cloud_jpg']);
 			if (empty($_POST['ewww_image_optimizer_cloud_png'])) $_POST['ewww_image_optimizer_cloud_png'] = '';
 			update_site_option('ewww_image_optimizer_cloud_png', $_POST['ewww_image_optimizer_cloud_png']);
+			if (empty($_POST['ewww_image_optimizer_cloud_png_lossy'])) $_POST['ewww_image_optimizer_cloud_png_lossy'] = '';
+			update_site_option('ewww_image_optimizer_cloud_png_lossy', $_POST['ewww_image_optimizer_cloud_png_lossy']);
+			if (empty($_POST['ewww_image_optimizer_cloud_png_compress'])) $_POST['ewww_image_optimizer_cloud_png_compress'] = '';
+			update_site_option('ewww_image_optimizer_cloud_png_compress', $_POST['ewww_image_optimizer_cloud_png_compress']);
 			if (empty($_POST['ewww_image_optimizer_cloud_gif'])) $_POST['ewww_image_optimizer_cloud_gif'] = '';
 			update_site_option('ewww_image_optimizer_cloud_gif', $_POST['ewww_image_optimizer_cloud_gif']);
 			if (empty($_POST['ewww_image_optimizer_auto'])) $_POST['ewww_image_optimizer_auto'] = '';
@@ -114,6 +118,8 @@ function ewww_image_optimizer_admin_init() {
 	register_setting('ewww_image_optimizer_options', 'ewww_image_optimizer_cloud_key');
 	register_setting('ewww_image_optimizer_options', 'ewww_image_optimizer_cloud_jpg');
 	register_setting('ewww_image_optimizer_options', 'ewww_image_optimizer_cloud_png');
+	register_setting('ewww_image_optimizer_options', 'ewww_image_optimizer_cloud_png_lossy');
+	register_setting('ewww_image_optimizer_options', 'ewww_image_optimizer_cloud_png_compress');
 	register_setting('ewww_image_optimizer_options', 'ewww_image_optimizer_cloud_gif');
 	register_setting('ewww_image_optimizer_options', 'ewww_image_optimizer_auto');
 	register_setting('ewww_image_optimizer_options', 'ewww_image_optimizer_aux_paths', 'ewww_image_optimizer_aux_paths_sanitize');
@@ -512,12 +518,12 @@ function ewww_image_optimizer_options () {
 		} ?>
 			<h3><?php _e('Cloud Settings', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?></h3>
 			<p><?php _e('If exec() is disabled for security reasons (and enabling it is not an option), or you would like to offload image optimization to a third-party server, you may purchase an API key for our cloud optimization service. The API key should be entered below, and cloud optimization must be enabled for each image format individually.', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?> <a href="http://www.exactlywww.com/cloud/"><?php _e('Purchase an API key.', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?></a></p>
-			<table class="form-table" width="600px">
+			<table class="form-table" style="max-width: 1024px">
 				<tr><th><label for="ewww_image_optimizer_cloud_key"><?php _e('Cloud optimization API Key', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?></label></th><td colspan="4"><input type="text" id="ewww_image_optimizer_cloud_key" name="ewww_image_optimizer_cloud_key" value="<?php echo ewww_image_optimizer_get_option('ewww_image_optimizer_cloud_key'); ?>" size="32" /> <?php _e('API Key will be validated when you save your settings.', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?> <a href="http://www.exactlywww.com/cloud/"><?php _e('Purchase a key.', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?></a></td></tr>
 				<tr><th><label for="ewww_image_optimizer_cloud_jpg">JPG <?php _e('cloud optimization', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?></label></th><td colspan="4"><input type="checkbox" id="ewww_image_optimizer_cloud_jpg" name="ewww_image_optimizer_cloud_jpg" value="true" <?php if (ewww_image_optimizer_get_option('ewww_image_optimizer_cloud_jpg') == TRUE) { ?>checked="true"<?php } ?> /></td></tr>
 				<tr><th><label for="ewww_image_optimizer_cloud_png">PNG <?php _e('cloud optimization', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?></label></th><td><input type="checkbox" id="ewww_image_optimizer_cloud_png" name="ewww_image_optimizer_cloud_png" value="true" <?php if (ewww_image_optimizer_get_option('ewww_image_optimizer_cloud_png') == TRUE) { ?>checked="true"<?php } ?> /></td>
-				<th><label for="ewww_image_optimizer_cloud_png_lossy"><?php _e('lossy optimization', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?></label></th><td><input type="checkbox" id="ewww_image_optimizer_cloud_png_lossy" name="ewww_image_optimizer_cloud_png_lossy" value="true" <?php if (ewww_image_optimizer_get_option('ewww_image_optimizer_cloud_png_lossy') == TRUE) { ?>checked="true"<?php } ?> /></td>
-				<th><label for="ewww_image_optimizer_cloud_png_compress"><?php _e('extra compression (slower)', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?></label></th><td><input type="checkbox" id="ewww_image_optimizer_cloud_png_compress" name="ewww_image_optimizer_cloud_png_compress" value="true" <?php if (ewww_image_optimizer_get_option('ewww_image_optimizer_cloud_png_compress') == TRUE) { ?>checked="true"<?php } ?> /></td></tr>
+				<th style="text-align: right"><label for="ewww_image_optimizer_cloud_png_lossy"><?php _e('lossy optimization', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?></label></th><td><input type="checkbox" id="ewww_image_optimizer_cloud_png_lossy" name="ewww_image_optimizer_cloud_png_lossy" value="true" <?php if (ewww_image_optimizer_get_option('ewww_image_optimizer_cloud_png_lossy') == TRUE) { ?>checked="true"<?php } ?> /></td>
+				<th style="text-align: right"><label for="ewww_image_optimizer_cloud_png_compress"><?php _e('extra compression (slower)', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?></label></th><td><input type="checkbox" id="ewww_image_optimizer_cloud_png_compress" name="ewww_image_optimizer_cloud_png_compress" value="true" <?php if (ewww_image_optimizer_get_option('ewww_image_optimizer_cloud_png_compress') == TRUE) { ?>checked="true"<?php } ?> /></td></tr>
 				<tr><th><label for="ewww_image_optimizer_cloud_gif">GIF <?php _e('cloud optimization', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?></label></th><td colspan="4"><input type="checkbox" id="ewww_image_optimizer_cloud_gif" name="ewww_image_optimizer_cloud_gif" value="true" <?php if (ewww_image_optimizer_get_option('ewww_image_optimizer_cloud_gif') == TRUE) { ?>checked="true"<?php } ?> /></td></tr>
 			</table>
 			<h3><?php _e('General Settings', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?></h3>
