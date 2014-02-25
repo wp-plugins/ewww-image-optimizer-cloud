@@ -85,13 +85,20 @@ function ewww_image_optimizer_count_optimized ($gallery) {
 	// TODO: perhaps short-circuit this if we can't finish in time
 	switch ($gallery) {
 		case 'media':
-/*	$funoptimized_full = 0;
-	$funoptimized_re = 0;
-	$fresize_count = 0;*/
-			// retrieve all the image attachment metadata from the database
-			$attachments = $wpdb->get_results("SELECT metas.meta_value FROM $wpdb->postmeta metas INNER JOIN $wpdb->posts posts ON posts.ID = metas.post_id WHERE posts.post_mime_type LIKE '%image%' AND metas.meta_key = '_wp_attachment_metadata'", ARRAY_N);
+			// see if we were given attachment IDs to work with via GET/POST
+		        if (empty($_REQUEST['ids']) && !get_option('ewww_image_optimizer_bulk_resume')) {
+				// retrieve all the image attachment metadata from the database
+				$attachments = $wpdb->get_results("SELECT metas.meta_value FROM $wpdb->postmeta metas INNER JOIN $wpdb->posts posts ON posts.ID = metas.post_id WHERE posts.post_mime_type LIKE '%image%' AND metas.meta_key = '_wp_attachment_metadata'", ARRAY_N);
+			} else {
+				// retrieve the attachment IDs that were pre-loaded in the database
+				$attachments = get_option('ewww_image_optimizer_bulk_attachments');
+			}
 			foreach ($attachments as $attachment) {
-				$meta = unserialize($attachment[0]);
+		        	if (empty($_REQUEST['ids']) && !get_option('ewww_image_optimizer_bulk_resume')) {
+					$meta = unserialize($attachment[0]);
+				} else {
+					$meta = wp_get_attachment_metadata( $attachment, true );
+				}
 				if (empty($meta['ewww_image_optimizer'])) {
 					$unoptimized_full++;
 				}
