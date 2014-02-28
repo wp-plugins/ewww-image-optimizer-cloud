@@ -324,7 +324,7 @@ function ewww_image_optimizer($file, $gallery_type, $converted, $new, $fullsize 
 				}
 			}
 			if (ewww_image_optimizer_get_option('ewww_image_optimizer_cloud_jpg')) {
-				list($file, $converted, $result, $new_size) = ewww_image_optimizer_cloud_optimizer($file, $type, $convert, $pngfile, 'image/png');
+				list($file, $converted, $result, $new_size) = ewww_image_optimizer_cloud_optimizer($file, $type, $convert, $pngfile, 'image/png', $fullsize);
 				if ($converted) $converted = $filenum;
 			}
 			break;
