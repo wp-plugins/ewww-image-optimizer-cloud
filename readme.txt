@@ -3,7 +3,7 @@ Contributors: nosilver4u
 Tags: images, image, attachments, attachment, optimize, optimization, nextgen, buddypress, flagallery, flash-gallery, lossless, photos, photo, picture, pictures, seo, compression, image-store, imstore, slider, image editor, gmagick, wp-symposium, meta-slider, metaslider, cloud
 Requires at least: 3.5
 Tested up to: 3.8.1
-Stable tag: 1.8.3
+Stable tag: 1.8.4
 License: GPLv3
 
 Reduce file sizes for images within WordPress including NextGEN, GRAND FlAGallery and more via paid cloud service.
@@ -99,11 +99,14 @@ That's not a question, but since I made it up, I'll answer it. See the Image Opt
 
 == Changelog ==
 
+= 1.8.4 =
+* fixed: Import process is much faster by about 50x
+
 = 1.8.3 =
 * changed: API key validation is now cached to greatly reduce page load time, mostly on the admin side, but also for any sites that generate or allow uploading images on the front-end
 * fixed: a few WP Retina @2x images were not being optimized, and none of them were stored in the ewwwio_images table properly
 * new: better compression for PNGs via advpng
-* new: lossy compression for PNG images via pngquant - contact me via http://www.exactlywww.com/contact-us/ to get 10% extra quota for the current month (free)
+* new: lossy compression for PNG images via pngquant
 * changed: Bulk Optimize loads much quicker (mostly noticable on sites with thousands of images)
 
 = 1.8.2 =
