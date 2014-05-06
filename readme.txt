@@ -109,6 +109,16 @@ That's not a question, but since I made it up, I'll answer it. See the Image Opt
 
 == Changelog ==
 
+= 1.9.0 =
+* changed: verification results for cloud optimization are still cached, but actual optimization requires pre-verification to maintain load-balancing
+* added: NextCellent Gallery support - no future development will be done for NextGEN 1.9.13, all future development will be on NextCellent.
+* updated translations for Romanian and Dutch
+* fixed some warnings and notices
+* added GMedia folder to Scan and Optimize function
+* show cumulative savings in status section
+* added: filter to bypass optimization for developer use
+* added: option to bypass optimization for small images
+
 = 1.8.5 =
 * fixed: images with empty metadata count as unoptimized images on Bulk Optimize
 * changed: Import process split into batches via AJAX to make it less likely to timeout and use less memory

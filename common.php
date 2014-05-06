@@ -1126,8 +1126,10 @@ function ewww_image_optimizer_resize_from_meta_data($meta, $ID = null, $log = tr
 					$meta['sizes'][$size]['real_orig_file'] = str_replace($base_dir, '', $resize_path);
 					$ewww_debug .= "resize path: $resize_path<br>";
 				}
-				// update the filename
-				$meta['sizes'][$size]['file'] = str_replace($base_dir, '', $optimized_file);
+				if ($optimized_file !== false) {
+					// update the filename
+					$meta['sizes'][$size]['file'] = str_replace($base_dir, '', $optimized_file);
+				}
 				// update the optimization results
 				$meta['sizes'][$size]['ewww_image_optimizer'] = $results;
 			}
