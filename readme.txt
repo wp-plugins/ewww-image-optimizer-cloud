@@ -2,7 +2,7 @@
 Contributors: nosilver4u
 Tags: images, image, attachments, attachment, optimize, optimization, nextgen, buddypress, flagallery, flash-gallery, lossless, photos, photo, picture, pictures, seo, compression, image-store, imstore, slider, image editor, gmagick, wp-symposium, meta-slider, metaslider, cloud
 Requires at least: 3.5
-Tested up to: 3.9.0
+Tested up to: 3.9.1
 Stable tag: 1.9.0
 License: GPLv3
 
@@ -14,7 +14,7 @@ EWWW Image Optimizer Cloud is a WordPress plugin that will automatically and los
 
 By default, EWWW Image Optimizer Cloud uses lossless optimization techniques, so your image quality will be exactly the same before and after the optimization. The only thing that will change is your file size. The one small exception to this is GIF animations. While the optimization is technically lossless, you will not be able to properly edit the animation again without performing an --unoptimize operation with gifsicle. The gif2png and jpg2png conversions are also lossless but the png2jpg process is not lossless.
 
-Images are optimized via cloud servers that utilize [jpegtran](http://jpegclub.org/jpegtran/), [optipng](http://optipng.sourceforge.net/), and [gifsicle](http://www.lcdf.org/gifsicle/). Images can optionally be converted to the most suitable file format.
+Images are optimized via cloud servers that utilize [jpegtran](http://jpegclub.org/jpegtran/), [optipng](http://optipng.sourceforge.net/), [pngquant](http://pngquant.org/), [advpng](http://advancemame.sourceforge.net/comp-readme.html), and [gifsicle](http://www.lcdf.org/gifsicle/). Images can optionally be converted to the most suitable file format.
 
 EWWW Image Optimizer Cloud offloads all optimization to designated servers which will work on any hosting platform. This can be desirable if you do not want to use the exec() function on your server, or prefer to offload the cpu demands of optimization for any reason. This is an ideal setup for web developers who can install this plugin for their clients with no risk due to the potentially insecure exec() function.
 
@@ -25,13 +25,13 @@ EWWW Image Optimizer Cloud offloads all optimization to designated servers which
 1. **Less bandwidth usage.** Optimizing your images can save you hundreds of KB per image, which means significantly less bandwidth usage.
 1. **Better Privacy.** The cloud servers do not store any images after optimization is complete, and you retain all rights to any images processed via the cloud service.
 1. **Root access not needed** No binaries needed on your local server, so it works on any hosting platform.
-1. **Optimize almost anything** Using the Optimize More tool, and the wp_image_editor class extension, any image in Wordpress can be optimized.
+1. **Optimize everything** Using the Bulk Optimize tool, and the wp_image_editor class extension, any image in Wordpress can be optimized.
 
 If you want to optimize images on your own server without using the cloud, see the [EWWW Image Optimizer](http://wordpress.org/plugins/ewww-image-optimizer/).
 
 = Bulk Optimize = 
 
-There are two functions on the Bulk Optimize page. One is to optimize all images in the Media Library. The Scan and Optimize is for everything else. Officially supported galleries (GRAND FlaGallery and NextGEN) have their own Bulk Optimize pages.  
+There are two functions on the Bulk Optimize page. One is to optimize all images in the Media Library. The Scan and Optimize is for everything else. Officially supported galleries (GRAND FlaGallery, NextCellent, and NextGEN) have their own Bulk Optimize pages.  
 
 = Skips Previously Optimized Images = 
 
@@ -41,22 +41,22 @@ All optimized images are stored in the database so that the plugin does not atte
 
 All images created by the new WP_Image_Editor class in WP 3.5 will be automatically optimized. Current implementations are GD, Imagick, and Gmagick. Images optimized via this class include Meta Slider, BuddyPress Activity Plus (thumbs), WP Retina 2x, Imsanity, Simple Image Sizes and probably countless others. If you have a plugin that uses WP_Image_Editor and would like EWWW IO to be able to optimize previous uploads, post a thread in the support forums.
 
-= Optimize Almost Everything =
+= Optimize Everything Else =
 
-As of version 1.7.0, site admins can specify any folder within their wordpress folder to be optimized. The 'Optimize More' option under Tools will optimize theme images, BuddyPress avatars, BuddyPress Activity Plus images, Meta Slider slides, WP Symposium images, GD bbPress attachments, and any user-specified folders. Additionally, this tool can run on an hourly basis via wp_cron to keep newly uploaded images optimized. Schedule optimization does NOT include Media Library images, because they are already optimized on upload.
+As of version 1.7.0, site admins can specify any folder within their wordpress folder to be optimized. The 'Optimize More' option under Tools will optimize theme images, BuddyPress avatars, BuddyPress Activity Plus images, Meta Slider slides, WP Symposium images, GD bbPress attachments, GMedia galleries, and any user-specified folders. Additionally, this tool can run on an hourly basis via wp_cron to keep newly uploaded images optimized. Schedule optimization does NOT include Media Library images, because they are already optimized on upload.
 
 = NextGEN Gallery =
 
 Features optimization on upload capability, re-optimization, and bulk optimizing. The NextGEN Bulk Optimize function is located near the bottom of the NextGEN menu, and will optimize all images in all galleries. It is also possible to optimize groups of images in a gallery, or multiple galleries at once.
 NOTE: Does not optimize thumbnails on initial upload for legacy (1.9.x) versions of NextGEN, but instead provides a button to optimize thumbnails after uploading images.
 
+= NextCellent Gallery =
+
+Features all the same capability as NextGEN, and is the continuation of legacy (1.9.x) NextGEN support.
+
 = GRAND Flash Album Gallery =
 
 Features optimization on upload capability, re-optimization, and bulk optimizing. The Bulk Optimize function is located near the bottom of the FlAGallery menu, and will optimize all images in all galleries. It is also possible to optimize groups of images in a gallery, or multiple galleries at once.
-
-= BuddyPress =
-
-Located under Media, the BuddyPress Optimizer allows the user to optimize all avatars (group and individual). Stores a history of optimized images, so that you can optimize new images without re-optimizing old images.
 
 = Image Store =
 
@@ -108,6 +108,13 @@ That's not a question, but since I made it up, I'll answer it. See the Image Opt
 3. Bulk optimization page. You can optimize all your images at once and resume a previous bulk optimization. This is very useful for existing blogs that have lots of images.
 
 == Changelog ==
+
+= 1.9.1 =
+* fixed: escapeshellarg command breaks Windows filenames
+* changed: exclude full-size from lossy optimization applies to lossy conversions too
+* changed: no more caching of cloud key verification results, since verification is 300x faster, and only called when we absolutely need it
+* added: Optimized/webview sizes in FlaGallery are tracked properly, and optimized during bulk operations, and manual one-time optimizations.
+* added: use nextgen2 hook for adding action link in gallery management pages
 
 = 1.9.0 =
 * changed: verification results for cloud optimization are still cached, but actual optimization requires pre-verification to maintain load-balancing
