@@ -1051,16 +1051,17 @@ function ewww_image_optimizer_resize_from_meta_data($meta, $ID = null, $log = tr
 		$ewww_debug .= "imsanity path: $imsanity_path<br>";
 		$image_size = filesize($file_path);
 		$query = $wpdb->prepare("SELECT id FROM $wpdb->ewwwio_images WHERE BINARY path = %s AND image_size = '$image_size'", $imsanity_path);
-		$already_optimized = $wpdb->get_results($query, ARRAY_A);
-		$ewww_debug .= "updating existing record, path: $file_path, size: " . $image_size . "<br>";
-		// store info on the current image for future reference
-		$wpdb->update( $wpdb->ewwwio_images,
-			array(
-				'path' => $file_path,
-			),
-			array(
-				'id' => $already_optimized[0]['id'],
-			));
+		if ( $already_optimized = $wpdb->get_results($query, ARRAY_A) ) {
+			$ewww_debug .= "updating existing record, path: $file_path, size: " . $image_size . "<br>";
+			// store info on the current image for future reference
+			$wpdb->update( $wpdb->ewwwio_images,
+				array(
+					'path' => $file_path,
+				),
+				array(
+					'id' => $already_optimized[0]['id'],
+				));
+		}
 	}
 	list($file, $msg, $conv, $original) = ewww_image_optimizer($file_path, $gallery_type, false, $new_image, ewww_image_optimizer_get_option('ewww_image_optimizer_lossy_skip_full'));
 	// update the optimization results in the metadata
@@ -1353,14 +1354,33 @@ function ewww_image_optimizer_png_alpha ($filename){
 	$ewww_debug .= "<b>ewww_image_optimizer_png_alpha()</b><br>";
 	// determine what color type is stored in the file
 	$color_type = ord(@file_get_contents($filename, NULL, NULL, 25, 1));
+	$ewww_debug .= "color type: $color_type<br>";
 	// if it is set to RGB alpha or Grayscale alpha
 	if ($color_type == 4 || $color_type == 6) {
 		$ewww_debug .= "transparency found<br>";
 		return true;
-	} else {
-		$ewww_debug .= "no transparency<br>";
-		return false;
+	} elseif ($color_type == 3 && ewww_image_optimizer_gd_support()) {
+		$image = imagecreatefrompng($filename);
+		if (imagecolortransparent($image) >= 0) {
+			$ewww_debug .= "transparency found<br>";
+			return true;
+		}
+		list($width, $height) = getimagesize($filename);
+		$ewww_debug .= "image dimensions: $width x $height<br>";
+		$ewww_debug .= "preparing to scan image<br>";
+		for ($y = 0; $y < $height; $y++) {
+			for ($x = 0; $x < $width; $x++) {
+				$color = imagecolorat($image, $x, $y);
+				$rgb = imagecolorsforindex($image, $color);
+				if ($rgb['alpha'] > 0) {
+					$ewww_debug .= "transparency found<br>";
+					return true;
+				}
+			}
+		}
 	}
+	$ewww_debug .= "no transparency<br>";
+	return false;
 }
 
 /**
