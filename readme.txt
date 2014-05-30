@@ -3,7 +3,7 @@ Contributors: nosilver4u
 Tags: images, image, attachments, attachment, optimize, optimization, nextgen, buddypress, flagallery, flash-gallery, lossless, photos, photo, picture, pictures, seo, compression, image-store, imstore, slider, image editor, gmagick, wp-symposium, meta-slider, metaslider, cloud
 Requires at least: 3.5
 Tested up to: 3.9.1
-Stable tag: 1.9.0
+Stable tag: 1.9.1
 License: GPLv3
 
 Reduce file sizes for images within WordPress including NextGEN, GRAND FlAGallery and more via paid cloud service.
@@ -112,6 +112,7 @@ That's not a question, but since I made it up, I'll answer it. See the Image Opt
 = 1.9.1 =
 * fixed: escapeshellarg command breaks Windows filenames
 * fixed: properly check paletted/indexed PNG files for transparency (requires GD)
+* fixed: images smaller than imsanity resize limit trigger notice
 * changed: exclude full-size from lossy optimization applies to lossy conversions too
 * changed: no more caching of cloud key verification results, since verification is 300x faster, and only called when we absolutely need it
 * added: Optimized/webview sizes in FlaGallery are tracked properly, and optimized during bulk operations, and manual one-time optimizations.
