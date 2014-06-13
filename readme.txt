@@ -2,8 +2,8 @@
 Contributors: nosilver4u
 Tags: images, image, attachments, attachment, optimize, optimization, nextgen, buddypress, flagallery, flash-gallery, lossless, photos, photo, picture, pictures, seo, compression, image-store, imstore, slider, image editor, gmagick, wp-symposium, meta-slider, metaslider, cloud
 Requires at least: 3.5
-Tested up to: 3.8
-Stable tag: 1.7.6
+Tested up to: 3.9.1
+Stable tag: 1.9.2
 License: GPLv3
 
 Reduce file sizes for images within WordPress including NextGEN, GRAND FlAGallery and more via paid cloud service.
@@ -14,7 +14,7 @@ EWWW Image Optimizer Cloud is a WordPress plugin that will automatically and los
 
 By default, EWWW Image Optimizer Cloud uses lossless optimization techniques, so your image quality will be exactly the same before and after the optimization. The only thing that will change is your file size. The one small exception to this is GIF animations. While the optimization is technically lossless, you will not be able to properly edit the animation again without performing an --unoptimize operation with gifsicle. The gif2png and jpg2png conversions are also lossless but the png2jpg process is not lossless.
 
-Images are optimized via cloud servers that utilize [jpegtran](http://jpegclub.org/jpegtran/), [optipng](http://optipng.sourceforge.net/), and [gifsicle](http://www.lcdf.org/gifsicle/). Images can optionally be converted to the most suitable file format.
+Images are optimized via cloud servers that utilize [jpegtran](http://jpegclub.org/jpegtran/), [optipng](http://optipng.sourceforge.net/), [pngquant](http://pngquant.org/), [advpng](http://advancemame.sourceforge.net/comp-readme.html), and [gifsicle](http://www.lcdf.org/gifsicle/). Images can optionally be converted to the most suitable file format.
 
 EWWW Image Optimizer Cloud offloads all optimization to designated servers which will work on any hosting platform. This can be desirable if you do not want to use the exec() function on your server, or prefer to offload the cpu demands of optimization for any reason. This is an ideal setup for web developers who can install this plugin for their clients with no risk due to the potentially insecure exec() function.
 
@@ -25,30 +25,38 @@ EWWW Image Optimizer Cloud offloads all optimization to designated servers which
 1. **Less bandwidth usage.** Optimizing your images can save you hundreds of KB per image, which means significantly less bandwidth usage.
 1. **Better Privacy.** The cloud servers do not store any images after optimization is complete, and you retain all rights to any images processed via the cloud service.
 1. **Root access not needed** No binaries needed on your local server, so it works on any hosting platform.
-1. **Optimize almost anything** Using the Optimize More tool, and the wp_image_editor class extension, nearly any image in Wordpress can be optimized.
+1. **Optimize everything** Using the Bulk Optimize tool, and the wp_image_editor class extension, any image in Wordpress can be optimized.
 
 If you want to optimize images on your own server without using the cloud, see the [EWWW Image Optimizer](http://wordpress.org/plugins/ewww-image-optimizer/).
+
+= Bulk Optimize = 
+
+There are two functions on the Bulk Optimize page. One is to optimize all images in the Media Library. The Scan and Optimize is for everything else. Officially supported galleries (GRAND FlaGallery, NextCellent, and NextGEN) have their own Bulk Optimize pages.  
+
+= Skips Previously Optimized Images = 
+
+All optimized images are stored in the database so that the plugin does not attempt to re-optimize them unless they are modified. On the Bulk Optimize page you can view a list of already optimized images. You may additionally choose to empty the table, remove individual images from the list, or use the Force optimize option to override the default behavior. Before running the Bulk Optimize the first time, you must run an import operation that scans your Media Library for any previously optimized images (from before version 1.8.0). The re-optimize links on the Media Library page also force the plugin to ignore the previous optimization status of images. 
 
 = WP Image Editor = 
 
 All images created by the new WP_Image_Editor class in WP 3.5 will be automatically optimized. Current implementations are GD, Imagick, and Gmagick. Images optimized via this class include Meta Slider, BuddyPress Activity Plus (thumbs), WP Retina 2x, Imsanity, Simple Image Sizes and probably countless others. If you have a plugin that uses WP_Image_Editor and would like EWWW IO to be able to optimize previous uploads, post a thread in the support forums.
 
-= Optimize Almost Everything =
+= Optimize Everything Else =
 
-As of version 1.7.0, site admins can specify any folder within their wordpress folder to be optimized. The 'Optimize More' option under Tools will optimize theme images, BuddyPress avatars, BuddyPress Activity Plus images, Meta Slider slides, WP Symposium images, GD bbPress attachments, and any user-specified folders. Additionally, this tool can run on an hourly basis via wp_cron to keep newly uploaded images optimized. Any images optimized via this tool are stored in the database so that the optimizer does not attempt to re-optimize them unless they are modified (and so you can take a look at the table to see what exactly is being optimized).
+As of version 1.7.0, site admins can specify any folder within their wordpress folder to be optimized. The 'Optimize More' option under Tools will optimize theme images, BuddyPress avatars, BuddyPress Activity Plus images, Meta Slider slides, WP Symposium images, GD bbPress attachments, GMedia galleries, and any user-specified folders. Additionally, this tool can run on an hourly basis via wp_cron to keep newly uploaded images optimized. Schedule optimization does NOT include Media Library images, because they are already optimized on upload.
 
 = NextGEN Gallery =
 
 Features optimization on upload capability, re-optimization, and bulk optimizing. The NextGEN Bulk Optimize function is located near the bottom of the NextGEN menu, and will optimize all images in all galleries. It is also possible to optimize groups of images in a gallery, or multiple galleries at once.
 NOTE: Does not optimize thumbnails on initial upload for legacy (1.9.x) versions of NextGEN, but instead provides a button to optimize thumbnails after uploading images.
 
+= NextCellent Gallery =
+
+Features all the same capability as NextGEN, and is the continuation of legacy (1.9.x) NextGEN support.
+
 = GRAND Flash Album Gallery =
 
 Features optimization on upload capability, re-optimization, and bulk optimizing. The Bulk Optimize function is located near the bottom of the FlAGallery menu, and will optimize all images in all galleries. It is also possible to optimize groups of images in a gallery, or multiple galleries at once.
-
-= BuddyPress =
-
-Located under Media, the BuddyPress Optimizer allows the user to optimize all avatars (group and individual). Stores a history of optimized images, so that you can optimize new images without re-optimizing old images.
 
 = Image Store =
 
@@ -62,6 +70,8 @@ Uploads are automatically optimized. Look for Optimize under the Image Store (Ga
 1. Enter your API key on the plugin settings page and enable the image formats you want to optimize.
 1. *Optional* Visit the settings page to enable/disable specific tools and turn on advanced optimization features.
 1. Done!
+
+The videos below are somewhat outdated, but still give you a good idea of the capabilities and functions of the plugin.
 
 EWWW IO Installation and Configuration:
 [youtube http://www.youtube.com/watch?v=uEU4DbDm3r0]
@@ -98,6 +108,77 @@ That's not a question, but since I made it up, I'll answer it. See the Image Opt
 3. Bulk optimization page. You can optimize all your images at once and resume a previous bulk optimization. This is very useful for existing blogs that have lots of images.
 
 == Changelog ==
+
+= 1.9.2 =
+* fixed: memory limit exceeded when counting total savings on settings page
+* added: PngOptimizerCL for even better optimization of PNG images on cloud service
+* changed: cloud processing nodes upgraded for faster image processing
+* changed: made queries for resuming bulk operations more efficient to avoid running into max query length problems
+* fixed: images that were not processed (cloud or otherwise) can be optimized later (they are no longer stored in ewwwio_images table)
+* changed: more efficient verification of cloud api keys
+
+= 1.9.1 =
+* fixed: escapeshellarg command breaks Windows filenames
+* fixed: properly check paletted/indexed PNG files for transparency (requires GD)
+* fixed: images smaller than imsanity resize limit trigger notice
+* changed: exclude full-size from lossy optimization applies to lossy conversions too
+* changed: no more caching of cloud key verification results, since verification is 300x faster, and only called when we absolutely need it
+* added: Optimized/webview sizes in FlaGallery are tracked properly, and optimized during bulk operations, and manual one-time optimizations.
+* added: use nextgen2 hook for adding action link in gallery management pages
+
+= 1.9.0 =
+* changed: verification results for cloud optimization are still cached, but actual optimization requires pre-verification to maintain load-balancing
+* added: NextCellent Gallery support - no future development will be done for NextGEN 1.9.13, all future development will be on NextCellent.
+* updated translations for Romanian and Dutch
+* fixed some warnings and notices
+* added GMedia folder to Scan and Optimize function
+* show cumulative savings in status section
+* added: filter to bypass optimization for developer use
+* added: option to bypass optimization for small images
+
+= 1.8.5 =
+* fixed: images with empty metadata count as unoptimized images on Bulk Optimize
+* changed: Import process split into batches via AJAX to make it less likely to timeout and use less memory
+* changed: Bulk Optimize page uses less memory and is quicker to load
+* fixed: custom column in NextGEN galleries works again with NextGEN 2.0.50+
+* fixed: license exceeded messages do not stall Bulk Optimize incorrectly
+* fixed: warning on Bulk Optimize for sites using UTC
+* fixed: user-specified paths to optimize did not work if using multi-site WP with plugin activated per-site
+
+= 1.8.4 =
+* fixed: Import process is much faster by about 50x
+
+= 1.8.3 =
+* changed: API key validation is now cached to greatly reduce page load time, mostly on the admin side, but also for any sites that generate or allow uploading images on the front-end
+* fixed: a few WP Retina @2x images were not being optimized, and none of them were stored in the ewwwio_images table properly
+* new: better compression for PNGs via advpng
+* new: lossy compression for PNG images via pngquant
+* changed: Bulk Optimize loads much quicker (mostly noticable on sites with thousands of images)
+
+= 1.8.2 =
+* updated Romanian translation
+* removed: potentially long-running query from upgrade
+* fixed: cloud queries were using the wrong hostname, all cloud users must apply this update to avoid service degradation
+
+= 1.8.1 =
+* fixed: undefined function broke lots of stuff
+
+= 1.8.0 =
+* fixed: debug output not working properly on bulk optimize
+* changed: when cloud license has been exceeded, the optimizer will not attempt to upload images, and bulk operations will stop immediately
+* fixed: unnecessary decimals will not be displayed for file-sizes in bytes
+* added: button to stop bulk optimization process
+* changed: Optimize More and Bulk Optimize are now on the same page
+* changed: After running Optimize More, you can Show Optimized Images and Empty Table without refreshing the page.
+* fixed: blank page when resetting bulk status in flagallery
+* change: already optimized images in Media Library will not be re-optimized by default via bulk tool
+* fixed: FlaGallery version 4.0, optimize on upload now works with plupload
+* fixed: proper validation that an image has been removed from the auxilliary images table
+* move more code into admin_init to improve page load on front-end
+* added: ability to specify number of seconds between images (throttling)
+* added: nextgen and grand flagallery thumb optimization is now stored in database
+* fixed: urls for converted resizes were not being updated in posts
+* fixed: attempt to convert PNGs with empty alpha channels after optimization on first pass, instead of on re-optimization
 
 = 1.7.6 =
 * port from EWWW Image Optimizer: pre-fork changelog below
@@ -389,6 +470,12 @@ That's not a question, but since I made it up, I'll answer it. See the Image Opt
 * First release (forked from CW Image Optimizer)
 
 == Upgrade Notice ==
+
+= 1.8.2 = 
+* All cloud users must apply this update to avoid service degradation
+
+= 1.8.0 =
+* Bulk Optimize page: Import to the custom ewwwio table is mandatory (one time) before running Bulk Optimize, and highly recommended for all users to prevent duplicate optimizations. Optimize More and Bulk Optimize are now on one page.
 
 = 1.7.6 =
 * metadata stripping now applies to PNG images, but only if using optipng 0.7.x, you may want to run a bulk optimize on all your PNG images to make sure you have the best possible optimization
