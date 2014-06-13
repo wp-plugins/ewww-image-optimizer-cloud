@@ -797,7 +797,9 @@ function ewww_image_optimizer_cloud_quota() {
 */
 function ewww_image_optimizer_cloud_optimizer($file, $type, $convert = false, $newfile = null, $newtype = null, $fullsize = false, $jpg_params = array('r' => '255', 'g' => '255', 'b' => '255', 'quality' => null)) {
 	global $ewww_debug;
-	ewww_image_optimizer_cloud_verify(false); 
+	if ( ! ewww_image_optimizer_cloud_verify(false) ) { 
+		return array($file, false, 'key verification failed', 0);
+	}
 	global $ewww_exceed;
 	global $ewww_cloud_ip;
 	$ewww_debug .= "<b>ewww_image_optimizer_cloud_optimizer()</b><br>";
@@ -880,10 +882,10 @@ function ewww_image_optimizer_cloud_optimizer($file, $type, $convert = false, $n
 		));
 	if (is_wp_error($response)) {
 		$error_message = $response->get_error_message();
-		$ewww_debug .= "verification failed: $error_message <br>";
-		return array(0, false, null);
+		$ewww_debug .= "optimize failed: $error_message <br>";
+		return array($file, false, 'cloud optimize failed', 0);
 	} elseif (empty($response['body'])) {
-		return array(0, false, null);
+		return array($file, false, 'empty server response', 0);
 	} else {
 		$tempfile = $file . ".tmp";
 		file_put_contents($tempfile, $response['body']);
