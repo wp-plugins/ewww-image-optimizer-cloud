@@ -95,7 +95,7 @@ function ewww_image_optimizer_count_optimized ($gallery) {
 				foreach ($attachment_ids as $id) {
 					$attachment_query .= "'" . $id . "',";
 				}
-				$ewww_debug .= "attachments: $attachment_query<br>";
+				$ewww_debug .= "attachments to query: $attachment_query<br>";
 				$attachment_query = 'AND metas.post_id IN (' . substr( $attachment_query, 0, -1 ) . ')';
 			}
 			$offset = 0;
@@ -202,6 +202,7 @@ function ewww_image_optimizer_count_optimized ($gallery) {
 	}
 	$elapsed = microtime(true) - $started;
 	$ewww_debug .= "counting images took $elapsed seconds<br>";
+	$ewww_debug .= "found $full_count fullsize ($unoptimized_full unoptimized), and $resize_count resizes ($unoptimized_re unoptimized)<br>";
 //	$ewww_debug .= "memory allowed: " . ini_get('memory_limit') . "<br>";
 //	$ewww_debug .= "after counting memory usage: " . memory_get_usage(true) . "<br>";
 	return array( $full_count, $unoptimized_full, $resize_count, $unoptimized_re );
