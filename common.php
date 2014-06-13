@@ -164,6 +164,13 @@ function ewww_image_optimizer_install_table() {
 	$bulk_attachments = get_option('ewww_image_optimizer_aux_attachments', '');
 	delete_option('ewww_image_optimizer_aux_attachments');
 	add_option('ewww_image_optimizer_aux_attachments', $bulk_attachments, '', 'no');
+
+	// need to re-register the api_key for the sanitize function
+	$api_key = ewww_image_optimizer_get_option('ewww_image_optimizer_cloud_key');
+	unregister_setting('ewww_image_optimizer_options', 'ewww_image_optimizer_cloud_key');
+	register_setting('ewww_image_optimizer_options', 'ewww_image_optimizer_cloud_key', 'ewww_image_optimizer_cloud_key_sanitize');
+	ewww_image_optimizer_set_option('ewww_image_optimizer_cloud_key', $api_key);
+
 }
 
 // lets the user know their network settings have been saved
@@ -670,18 +677,28 @@ function ewww_image_optimizer_delete ($id) {
 }
 
 // tells the user we could not verify the cloud api key
-function ewww_image_optimizer_notice_cloud_failed() {
+/*function ewww_image_optimizer_notice_cloud_failed() {
 	global $ewww_debug;
 	$ewww_debug .= "<b>ewww_image_optimizer_notice_cloud_failed()</b><br>";
 	echo "<div id='ewww-image-optimizer-warning-cloud' class='error'><p><strong>" . __('EWWW Image Optimizer was not able to verify your Cloud API Key.', EWWW_IMAGE_OPTIMIZER_DOMAIN) . "</strong></p></div>";
+}*/
+
+function ewww_image_optimizer_cloud_key_sanitize ( $key ) {
+	if ( ewww_image_optimizer_cloud_verify( false, $key ) ) {
+		return $key;
+	} else {
+		return '';
+	}
 }
  
 // submits the api key for verification
-function ewww_image_optimizer_cloud_verify ( $cache = true ) {
+function ewww_image_optimizer_cloud_verify ( $cache = true, $api_key = '' ) {
 	global $ewww_debug;
 	global $ewww_cloud_ip;
 	$ewww_debug .= "<b>ewww_image_optimizer_cloud_verify()</b><br>";
-	$api_key = ewww_image_optimizer_get_option('ewww_image_optimizer_cloud_key');
+	if ( empty( $api_key ) ) {
+		$api_key = ewww_image_optimizer_get_option('ewww_image_optimizer_cloud_key');
+	}
 	if (empty($api_key)) {
 		update_site_option('ewww_image_optimizer_cloud_jpg', '');
 		update_site_option('ewww_image_optimizer_cloud_png', '');
@@ -727,7 +744,7 @@ function ewww_image_optimizer_cloud_verify ( $cache = true ) {
 		}
 	}
 	if (empty($verified)) {
-		update_option ( 'ewww_image_optimizer_cloud_verified', '' );
+	//	update_option ( 'ewww_image_optimizer_cloud_verified', '' );
 /*		update_site_option('ewww_image_optimizer_cloud_jpg', '');
 		update_site_option('ewww_image_optimizer_cloud_png', '');
 		update_site_option('ewww_image_optimizer_cloud_gif', '');
@@ -1599,6 +1616,16 @@ function ewww_image_optimizer_get_option ($option_name) {
 		$option_value = get_option($option_name);
 	}
 	return $option_value;
+}
+
+// set an option: use 'site' setting if plugin is network activated, otherwise use 'blog' setting
+function ewww_image_optimizer_set_option ($option_name, $option_value) {
+	if (function_exists('is_plugin_active_for_network') && is_plugin_active_for_network(plugin_basename(EWWW_IMAGE_OPTIMIZER_PLUGIN_FILE))) {
+		$success = update_site_option($option_name, $option_value);
+	} else {
+		$success = update_option($option_name, $option_value);
+	}
+	return $success;
 }
 
 function ewww_image_optimizer_savings_script() {

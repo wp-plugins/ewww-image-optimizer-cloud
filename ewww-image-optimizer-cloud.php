@@ -1,7 +1,7 @@
 <?php
 /**
  * Integrate cloud image optimization into WordPress.
- * @version 1.9.1.2
+ * @version 1.9.1.3
  * @package EWWW_Image_Optimizer_Cloud
  */
 /*
@@ -10,7 +10,7 @@ Plugin URI: http://www.exactlywww.com/cloud/
 Description: Reduce file sizes for images within WordPress including NextGEN Gallery and GRAND FlAGallery via paid cloud service.
 Author: Shane Bishop
 Text Domain: ewww-image-optimizer-cloud
-Version: 1.9.1.2
+Version: 1.9.1.3
 Author URI: http://www.shanebishop.net/
 License: GPLv3
 */
@@ -21,7 +21,7 @@ define('EWWW_IMAGE_OPTIMIZER_DOMAIN', 'ewww-image-optimizer-cloud');
 define('EWWW_IMAGE_OPTIMIZER_PLUGIN_FILE', __FILE__);
 // this is the full system path to the plugin folder
 define('EWWW_IMAGE_OPTIMIZER_PLUGIN_PATH', plugin_dir_path(__FILE__));
-define('EWWW_IMAGE_OPTIMIZER_VERSION', '191.2');
+define('EWWW_IMAGE_OPTIMIZER_VERSION', '191.3');
 
 require_once(EWWW_IMAGE_OPTIMIZER_PLUGIN_PATH . 'common.php');
 
@@ -37,7 +37,6 @@ function ewww_image_optimizer_init() {
 		ewww_image_optimizer_install_table();
 		update_option('ewww_image_optimizer_version', EWWW_IMAGE_OPTIMIZER_VERSION);
 	}
-//	ewww_image_optimizer_cloud_verify();
 	ewww_image_optimizer_disable_tools();
 	if (!defined('EWWW_IMAGE_OPTIMIZER_CLOUD'))
 		define('EWWW_IMAGE_OPTIMIZER_CLOUD', TRUE);
@@ -49,10 +48,10 @@ function ewww_image_optimizer_admin_init() {
 	global $ewww_debug;
 	$ewww_debug .= "<b>ewww_image_optimizer_admin_init()</b><br>";
 	ewww_image_optimizer_init();
-	if ( ewww_image_optimizer_get_option( 'ewww_image_optimizer_cloud_key' ) && ! get_option( 'ewww_image_optimizer_cloud_verified' ) && ! ewww_image_optimizer_cloud_verify( false ) ) {
+	/*if ( ewww_image_optimizer_get_option( 'ewww_image_optimizer_cloud_key' ) && ! get_option( 'ewww_image_optimizer_cloud_verified' ) && ! ewww_image_optimizer_cloud_verify( false ) ) {
 		add_action('network_admin_notices', 'ewww_image_optimizer_notice_cloud_failed');
 		add_action('admin_notices', 'ewww_image_optimizer_notice_cloud_failed');
-	}
+	}*/
 	if (function_exists('is_plugin_active_for_network') && is_plugin_active_for_network('ewww-image-optimizer-cloud/ewww-image-optimizer-cloud.php')) {
 		// network version is simply incremented any time we need to make changes to this section for new defaults
 		if (get_site_option('ewww_image_optimizer_network_version') < 1) {
@@ -124,7 +123,7 @@ function ewww_image_optimizer_admin_init() {
 	register_setting('ewww_image_optimizer_options', 'ewww_image_optimizer_aux_resume');
 	register_setting('ewww_image_optimizer_options', 'ewww_image_optimizer_aux_attachments');
 	register_setting('ewww_image_optimizer_options', 'ewww_image_optimizer_aux_type');
-	register_setting('ewww_image_optimizer_options', 'ewww_image_optimizer_cloud_key');
+	register_setting('ewww_image_optimizer_options', 'ewww_image_optimizer_cloud_key', 'ewww_image_optimizer_cloud_key_sanitize');
 	register_setting('ewww_image_optimizer_options', 'ewww_image_optimizer_cloud_jpg');
 	register_setting('ewww_image_optimizer_options', 'ewww_image_optimizer_cloud_png');
 	register_setting('ewww_image_optimizer_options', 'ewww_image_optimizer_cloud_png_compress');
