@@ -49,7 +49,10 @@ function ewww_image_optimizer_admin_init() {
 	global $ewww_debug;
 	$ewww_debug .= "<b>ewww_image_optimizer_admin_init()</b><br>";
 	ewww_image_optimizer_init();
-
+	if ( ewww_image_optimizer_get_option( 'ewww_image_optimizer_cloud_key' ) && ! get_option( 'ewww_image_optimizer_cloud_verified' ) && ! ewww_image_optimizer_cloud_verify( false ) ) {
+		add_action('network_admin_notices', 'ewww_image_optimizer_notice_cloud_failed');
+		add_action('admin_notices', 'ewww_image_optimizer_notice_cloud_failed');
+	}
 	if (function_exists('is_plugin_active_for_network') && is_plugin_active_for_network('ewww-image-optimizer-cloud/ewww-image-optimizer-cloud.php')) {
 		// network version is simply incremented any time we need to make changes to this section for new defaults
 		if (get_site_option('ewww_image_optimizer_network_version') < 1) {

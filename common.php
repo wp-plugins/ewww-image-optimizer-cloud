@@ -669,6 +669,13 @@ function ewww_image_optimizer_delete ($id) {
 	return;
 }
 
+// tells the user we could not verify the cloud api key
+function ewww_image_optimizer_notice_cloud_failed() {
+	global $ewww_debug;
+	$ewww_debug .= "<b>ewww_image_optimizer_notice_cloud_failed()</b><br>";
+	echo "<div id='ewww-image-optimizer-warning-cloud' class='error'><p><strong>" . __('EWWW Image Optimizer was not able to verify your Cloud API Key.', EWWW_IMAGE_OPTIMIZER_DOMAIN) . "</strong></p></div>";
+}
+ 
 // submits the api key for verification
 function ewww_image_optimizer_cloud_verify ( $cache = true ) {
 	global $ewww_debug;
@@ -720,13 +727,13 @@ function ewww_image_optimizer_cloud_verify ( $cache = true ) {
 		}
 	}
 	if (empty($verified)) {
-		// TODO: perhaps throw a notice on the admin screen instead of just disabling them
-		update_site_option('ewww_image_optimizer_cloud_jpg', '');
+		update_option ( 'ewww_image_optimizer_cloud_verified', '' );
+/*		update_site_option('ewww_image_optimizer_cloud_jpg', '');
 		update_site_option('ewww_image_optimizer_cloud_png', '');
 		update_site_option('ewww_image_optimizer_cloud_gif', '');
 		update_option('ewww_image_optimizer_cloud_jpg', '');
 		update_option('ewww_image_optimizer_cloud_png', '');
-		update_option('ewww_image_optimizer_cloud_gif', '');
+		update_option('ewww_image_optimizer_cloud_gif', '');*/
 		return FALSE;
 	} else {
 		update_option ( 'ewww_image_optimizer_cloud_verified', $verified );
