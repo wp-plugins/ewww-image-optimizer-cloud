@@ -14,7 +14,7 @@ EWWW Image Optimizer Cloud is a WordPress plugin that will automatically and los
 
 By default, EWWW Image Optimizer Cloud uses lossless optimization techniques, so your image quality will be exactly the same before and after the optimization. The only thing that will change is your file size. The one small exception to this is GIF animations. While the optimization is technically lossless, you will not be able to properly edit the animation again without performing an --unoptimize operation with gifsicle. The gif2png and jpg2png conversions are also lossless but the png2jpg process is not lossless.
 
-Images are optimized via cloud servers that utilize [jpegtran](http://jpegclub.org/jpegtran/), [optipng](http://optipng.sourceforge.net/), [pngquant](http://pngquant.org/), [advpng](http://advancemame.sourceforge.net/comp-readme.html), and [gifsicle](http://www.lcdf.org/gifsicle/). Images can optionally be converted to the most suitable file format.
+Images are optimized via cloud servers that utilize [jpegtran](http://jpegclub.org/jpegtran/), [optipng](http://optipng.sourceforge.net/), [pngquant](http://pngquant.org/), [advpng](http://advancemame.sourceforge.net/comp-readme.html), [PngOptimizerCL](http://psydk.org/pngoptimizer), and [gifsicle](http://www.lcdf.org/gifsicle/). Images can optionally be converted to the most suitable file format.
 
 EWWW Image Optimizer Cloud offloads all optimization to designated servers which will work on any hosting platform. This can be desirable if you do not want to use the exec() function on your server, or prefer to offload the cpu demands of optimization for any reason. This is an ideal setup for web developers who can install this plugin for their clients with no risk due to the potentially insecure exec() function.
 
@@ -108,6 +108,9 @@ That's not a question, but since I made it up, I'll answer it. See the Image Opt
 3. Bulk optimization page. You can optimize all your images at once and resume a previous bulk optimization. This is very useful for existing blogs that have lots of images.
 
 == Changelog ==
+
+= 1.9.3 =
+* added: fallback mode when totals for resizes and unoptimized images cannot be determined by the bulk optimize tool
 
 = 1.9.2 =
 * fixed: memory limit exceeded when counting total savings on settings page

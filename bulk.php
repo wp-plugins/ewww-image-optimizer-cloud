@@ -49,7 +49,11 @@ function ewww_image_optimizer_bulk_preview() {
 			echo '<p>' . __('You do not appear to have uploaded any images yet.', EWWW_IMAGE_OPTIMIZER_DOMAIN) . '</p>';
 		} else { ?>
 			<div id="bulk-forms">
-			<p class="media-info bulk-info"><?php printf(__('%1$d images in the Media Library have been selected (%2$d unoptimized), with %3$d resizes (%4$d unoptimized).', EWWW_IMAGE_OPTIMIZER_DOMAIN), $fullsize_count, $unoptimized_count, $resize_count, $unoptimized_resize_count); ?><br />
+<?php			if ($resize_count === '') { ?>
+				<p class="media-info bulk-info"><?php printf(__('%1$d images in the Media Library have been selected, unable to determine how many resizes and how many are unoptimized.', EWWW_IMAGE_OPTIMIZER_DOMAIN), $fullsize_count); ?><br />
+<?php			} else { ?>
+				<p class="media-info bulk-info"><?php printf(__('%1$d images in the Media Library have been selected (%2$d unoptimized), with %3$d resizes (%4$d unoptimized).', EWWW_IMAGE_OPTIMIZER_DOMAIN), $fullsize_count, $unoptimized_count, $resize_count, $unoptimized_resize_count); ?><br />
+<?php			} ?>
 			<?php _e('Previously optimized images will be skipped by default.', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?></p>
 			<form id="bulk-start" class="bulk-form" method="post" action="">
 				<input id="bulk-first" type="submit" class="button-secondary action" value="<?php echo $button_text; ?>" />
@@ -87,6 +91,7 @@ function ewww_image_optimizer_count_optimized ($gallery) {
 	$started = microtime(true);
 	$max_query = 3000;
 	$attachment_query_count = 0;
+	$query_success = false;
 	switch ($gallery) {
 		case 'media':
 			// see if we were given attachment IDs to work with via GET/POST
@@ -107,6 +112,7 @@ function ewww_image_optimizer_count_optimized ($gallery) {
 			// retrieve all the image attachment metadata from the database
 			while ( $attachments = $wpdb->get_results( "SELECT metas.meta_value FROM $wpdb->postmeta metas INNER JOIN $wpdb->posts posts ON posts.ID = metas.post_id WHERE posts.post_mime_type LIKE '%image%' AND metas.meta_key = '_wp_attachment_metadata' $attachment_query LIMIT $offset, $max_query", ARRAY_N ) ) {
 				$ewww_debug .= "fetched " . count( $attachments ) . " attachments starting at $offset<br>";
+				$query_success = true;
 				foreach ($attachments as $attachment) {
 					$meta = unserialize($attachment[0]);
 					if (empty($meta)) {
@@ -161,6 +167,7 @@ function ewww_image_optimizer_count_optimized ($gallery) {
 			$sizes = $storage->get_image_sizes();
 			$offset = 0;
 			while ( $attachments = $wpdb->get_col( "SELECT meta_data FROM $wpdb->nggpictures $attachment_query LIMIT $offset, $max_query" ) ) {
+				$query_success = true;
 				foreach ($attachments as $attachment) {
 					$meta = unserialize( $attachment );
 					if ( ! is_array( $meta ) ) {
@@ -207,6 +214,7 @@ function ewww_image_optimizer_count_optimized ($gallery) {
 			}
 			$offset = 0;
 			while ( $attachments = $wpdb->get_col( "SELECT meta_data FROM $wpdb->flagpictures $attachment_query LIMIT $offset, $max_query" ) ) {
+				$query_success = true;
 				foreach ($attachments as $attachment) {
 					$meta = unserialize( $attachment );
 					if ( ! is_array( $meta ) ) {
@@ -242,6 +250,9 @@ function ewww_image_optimizer_count_optimized ($gallery) {
 				}
 			}
 			break;
+	}
+	if ( empty( $full_count ) && !$query_success && ! empty( $attachment_ids ) ) {
+		return array( count( $attachment_ids ), '', '', '');
 	}
 	$elapsed = microtime(true) - $started;
 	$ewww_debug .= "counting images took $elapsed seconds<br>";
