@@ -884,8 +884,8 @@ function ewww_image_optimizer_cloud_optimizer($file, $type, $convert = false, $n
 		$error_message = $response->get_error_message();
 		$ewww_debug .= "optimize failed: $error_message <br>";
 		return array($file, false, 'cloud optimize failed', 0);
-	} elseif (empty($response['body'])) {
-		return array($file, false, 'empty server response', 0);
+//	} elseif (empty($response['body'])) {
+//		return array($file, false, '', filesize($file));
 	} else {
 		$tempfile = $file . ".tmp";
 		file_put_contents($tempfile, $response['body']);
