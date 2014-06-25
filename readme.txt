@@ -111,6 +111,8 @@ That's not a question, but since I made it up, I'll answer it. See the Image Opt
 
 = 1.9.3 =
 * added: fallback mode when totals for resizes and unoptimized images cannot be determined by the bulk optimize tool
+* added: up to 30 second retry when import is interrupted on bulk optimize page
+* fixed: suppress 'empty server response' messages for cloud users, instead correctly report No Savings
 
 = 1.9.2 =
 * fixed: memory limit exceeded when counting total savings on settings page

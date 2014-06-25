@@ -1,6 +1,8 @@
 <?php
 // common functions for Standard and Cloud plugins
-
+// TODO: webp: And then you can use URL with .webp version in Chrome and browsers that send Accept: image/webp, and .png for the rest (and all will get small file!)
+// http://mikevoermans.com/apache/serving-right-image-htaccess-webp 
+// http://www.stucox.com/blog/client-side-vs-server-side-detection-for-webp/
 // initialize debug global
 $disabled = ini_get('disable_functions');
 if (preg_match('/get_current_user/', $disabled)) {
