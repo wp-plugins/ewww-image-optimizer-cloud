@@ -1,6 +1,7 @@
 <?php
 // common functions for Standard and Cloud plugins
 // TODO: webp: And then you can use URL with .webp version in Chrome and browsers that send Accept: image/webp, and .png for the rest (and all will get small file!)
+// TODO: include plugin version in cloud user agent along with WP version
 // http://mikevoermans.com/apache/serving-right-image-htaccess-webp 
 // http://www.stucox.com/blog/client-side-vs-server-side-detection-for-webp/
 // initialize debug global
