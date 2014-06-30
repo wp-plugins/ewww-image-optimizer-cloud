@@ -446,10 +446,14 @@ function ewww_image_optimizer_gd_support() {
 
 // makes sure the user isn't putting crap in the database
 function ewww_image_optimizer_jpg_background_sanitize ($input) {
+	global $ewww_debug;
+	$ewww_debug .= "<b>ewww_image_optimizer_jpg_background_santitize()</b><br>";
 	return sanitize_text_field($input);
 }
 
 function ewww_image_optimizer_jpg_quality_sanitize ($input) {
+	global $ewww_debug;
+	$ewww_debug .= "<b>ewww_image_optimizer_jpg_quality_santitize()</b><br>";
 	return sanitize_text_field($input);
 }
 
@@ -686,9 +690,13 @@ function ewww_image_optimizer_delete ($id) {
 }*/
 
 function ewww_image_optimizer_cloud_key_sanitize ( $key ) {
+	global $ewww_debug;
+	$ewww_debug .= "<b>ewww_image_optimizer_cloud_key_sanitize()</b><br>";
 	if ( ewww_image_optimizer_cloud_verify( false, $key ) ) {
+		$ewww_debug .= "sanitize (verification) successful<br>";
 		return $key;
 	} else {
+		$ewww_debug .= "sanitize (verification) failed<br>";
 		return '';
 	}
 }
