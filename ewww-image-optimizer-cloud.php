@@ -33,6 +33,7 @@ function ewww_image_optimizer_cloud_init() {
 	ewww_image_optimizer_disable_tools();
 	if (!defined('EWWW_IMAGE_OPTIMIZER_CLOUD')) {
 		define('EWWW_IMAGE_OPTIMIZER_CLOUD', TRUE);
+		define('EWWW_IMAGE_OPTIMIZER_NOEXEC', TRUE);
 	}
 }
 
