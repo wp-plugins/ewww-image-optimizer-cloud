@@ -1,7 +1,7 @@
 <?php
 /**
  * Integrate cloud image optimization into WordPress.
- * @version 1.9.3.2
+ * @version 1.9.3.4
  * @package EWWW_Image_Optimizer_Cloud
  */
 /*
@@ -10,7 +10,7 @@ Plugin URI: http://www.exactlywww.com/cloud/
 Description: Reduce file sizes for images within WordPress including NextGEN Gallery and GRAND FlAGallery via paid cloud service.
 Author: Shane Bishop
 Text Domain: ewww-image-optimizer-cloud
-Version: 1.9.3.2
+Version: 1.9.3.4
 Author URI: http://www.shanebishop.net/
 License: GPLv3
 */
@@ -52,6 +52,9 @@ function ewww_image_optimizer_mimetype($path, $case) {
 	global $ewww_debug;
 	$ewww_debug .= "<b>ewww_image_optimizer_mimetype()</b><br>";
 	$ewww_debug .= "testing mimetype: $path <br>";
+	if ( $case == 'i' && preg_match( '/^RIFF.+WEBPVP8/', file_get_contents( $path, NULL, NULL, 0, 16 ) ) ) { 
+		return 'image/webp';
+	}
 	if (function_exists('finfo_file') && defined('FILEINFO_MIME')) {
 		// create a finfo resource
 		$finfo = finfo_open(FILEINFO_MIME);
@@ -213,7 +216,14 @@ function ewww_image_optimizer($file, $gallery_type, $converted, $new, $fullsize 
 			}
 			if (ewww_image_optimizer_get_option('ewww_image_optimizer_cloud_jpg')) {
 				list($file, $converted, $result, $new_size) = ewww_image_optimizer_cloud_optimizer($file, $type, $convert, $pngfile, 'image/png', $fullsize);
-				if ($converted) $converted = $filenum;
+				if ($converted) {
+					$converted = $filenum;
+					ewww_image_optimizer_webp_create( $file, $new_size, 'image/png', null );
+				} else {
+					ewww_image_optimizer_webp_create( $file, $new_size, $type, null );
+				}
+			} else {
+				ewww_image_optimizer_webp_create( $file, $orig_size, $type, null ); 
 			}
 			break;
 		case 'image/png':
@@ -269,11 +279,16 @@ function ewww_image_optimizer($file, $gallery_type, $converted, $new, $fullsize 
 					return array( $file, $results_msg, $converted, $original );
 				}
 			}
-			// retrieve the filesize of the original image
-			//$orig_size = filesize($file);
 			if (ewww_image_optimizer_get_option('ewww_image_optimizer_cloud_png')) {
 				list($file, $converted, $result, $new_size) = ewww_image_optimizer_cloud_optimizer($file, $type, $convert, $jpgfile, 'image/jpeg', $fullsize, array('r' => $r, 'g' => $g, 'b' => $b, 'quality' => $gquality));
-				if ($converted) $converted = $filenum;
+				if ($converted) {
+					$converted = $filenum;
+					ewww_image_optimizer_webp_create( $file, $new_size, 'image/jpeg', null ); 
+				} else { 
+ 					ewww_image_optimizer_webp_create( $file, $new_size, $type, null ); 
+ 				}
+			} else {
+				ewww_image_optimizer_webp_create( $file, $orig_size, $type, null );
 			}
 			break;
 		case 'image/gif':
@@ -302,7 +317,10 @@ function ewww_image_optimizer($file, $gallery_type, $converted, $new, $fullsize 
 			}
 			if (ewww_image_optimizer_get_option('ewww_image_optimizer_cloud_gif')) {
 				list($file, $converted, $result, $new_size) = ewww_image_optimizer_cloud_optimizer($file, $type, $convert, $pngfile, 'image/png', $fullsize);
-				if ($converted) $converted = $filenum;
+				if ($converted) {
+					$converted = $filenum;
+					ewww_image_optimizer_webp_create( $file, $new_size, 'image/png', null ); 
+ 				}
 			}
 			break;
 		default:
@@ -321,144 +339,19 @@ function ewww_image_optimizer($file, $gallery_type, $converted, $new, $fullsize 
 	return array($file, $result, $converted, $original);
 }
 
-// displays the EWWW IO options and provides one-click install for the optimizer utilities
-function ewww_image_optimizer_options () {
+// creates webp images alongside JPG and PNG files
+// needs a filename, the filesize, mimetype, and the path to the cwebp binary (null for cloud)
+function ewww_image_optimizer_webp_create( $file, $orig_size, $type, $tool ) {
 	global $ewww_debug;
-	$ewww_debug .= "<b>ewww_image_optimizer_options()</b><br>";
-	?>
-	<script type='text/javascript'>
-		jQuery(document).ready(function($) {$('.fade').fadeTo(5000,1).fadeOut(3000);});
-	</script>
-	<div class="wrap" style="clear: both"><div id="ewww-container-left" style="float: left; margin-right: 200px;">
-		<div id="icon-options-general" class="icon32"><br /></div>
-		<h2>EWWW <?php _e('Image Optimizer Settings', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?></h2>
-		<p><a href="http://wordpress.org/extend/plugins/ewww-image-optimizer-cloud/"><?php _e('Plugin Home Page', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?></a> |
-		<a href="http://wordpress.org/extend/plugins/ewww-image-optimizer-cloud/installation/"><?php _e('Installation Instructions', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?></a> | 
-		<a href="http://wordpress.org/support/plugin/ewww-image-optimizer-cloud"><?php _e('Plugin Support', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?></a> | 
-		<a href="http://stats.pingdom.com/w89y81bhecp4"><?php _e('Cloud Status', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?></a></p>
-<?php		if (function_exists('is_plugin_active_for_network') && is_plugin_active_for_network(EWWW_IMAGE_OPTIMIZER_PLUGIN_FILE_REL)) {
-			$bulk_link = __('Media Library') . ' -> ' . __('Bulk Optimize', EWWW_IMAGE_OPTIMIZER_DOMAIN);
-		} else {
-			$bulk_link = '<a href="upload.php?page=ewww-image-optimizer-bulk">' . __('Bulk Optimize', EWWW_IMAGE_OPTIMIZER_DOMAIN) . '</a>'; 
-		} ?> 
-		<p><?php printf( __( 'New images uploaded to the Media Library will be optimized automatically. If you have existing images you would like to optimize, you can use the %s tool.', EWWW_IMAGE_OPTIMIZER_DOMAIN ), $bulk_link ); ?></p>
-		<div id="status" style="border: 1px solid #ccc; padding: 0 8px; border-radius: 12px;">
-			<h3>Plugin Status</h3>
-			<?php
-			echo "<b>" . __('Total Savings:', EWWW_IMAGE_OPTIMIZER_DOMAIN) . "</b> <span id='total_savings'>" . __('Calculating...', EWWW_IMAGE_OPTIMIZER_DOMAIN) . "</span><br>";
-			if (ewww_image_optimizer_get_option('ewww_image_optimizer_cloud_key')) {
-				echo '<p><b>Cloud API Key:</b> ';
-				$verify_cloud = ewww_image_optimizer_cloud_verify(false); 
-				if (preg_match('/great/', $verify_cloud)) {
-					echo '<span style="color: green">' . __('Verified,', EWWW_IMAGE_OPTIMIZER_DOMAIN) . ' </span>';
-					echo ewww_image_optimizer_cloud_quota();
-				} elseif (preg_match('/exceeded/', $verify_cloud)) { 
-					echo '<span style="color: orange">' . __('Verified,', EWWW_IMAGE_OPTIMIZER_DOMAIN) . ' </span>'; 
-					echo ewww_image_optimizer_cloud_quota();
-				} else { 
-					echo '<span style="color: red">' . __('Not Verified', EWWW_IMAGE_OPTIMIZER_DOMAIN) . '</span>'; 
-				}
-				echo '</p>';
-			}
-			echo "\n";
-			echo '<b>' . __('Only need one of these:', EWWW_IMAGE_OPTIMIZER_DOMAIN) . ' </b>';
-			// initialize this variable to check for the 'file' command if we don't have any php libraries we can use
-			if (function_exists('finfo_file')) {
-				echo 'finfo: <span style="color: green; font-weight: bolder">OK</span>&emsp;&emsp;';
-				$file_command_check = false;
-			} else {
-				echo 'finfo: <span style="color: red; font-weight: bolder">MISSING</span>&emsp;&emsp;';
-			}
-			if (function_exists('getimagesize')) {
-				echo 'getimagesize(): <span style="color: green; font-weight: bolder">OK</span>&emsp;&emsp;';
-			} else {
-				echo 'getimagesize(): <span style="color: red; font-weight: bolder">MISSING</span>&emsp;&emsp;';
-			}
-			if (function_exists('mime_content_type')) {
-				echo 'mime_content_type(): <span style="color: green; font-weight: bolder">OK</span><br>';
-				$file_command_check = false;
-			} else {
-				echo 'mime_content_type(): <span style="color: red; font-weight: bolder">MISSING</span><br>';
-			}
-			?></p>
-		</div>
-<?php		if (function_exists('is_plugin_active_for_network') && is_plugin_active_for_network(EWWW_IMAGE_OPTIMIZER_PLUGIN_FILE_REL)) { ?>
-		<form method="post" action="">
-<?php		} else { ?>
-		<form method="post" action="options.php">
-			<?php settings_fields('ewww_image_optimizer_options'); 
-		} ?>
-			<h3><?php _e('Cloud Settings', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?></h3>
-			<p><?php _e('If exec() is disabled for security reasons (and enabling it is not an option), or you would like to offload image optimization to a third-party server, you may purchase an API key for our cloud optimization service. The API key should be entered below, and cloud optimization must be enabled for each image format individually.', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?> <a href="http://www.exactlywww.com/cloud/"><?php _e('Purchase an API key.', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?></a></p>
-			<table class="form-table">
-				<tr><th><label for="ewww_image_optimizer_cloud_key"><?php _e('Cloud optimization API Key', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?></label></th><td><input type="text" id="ewww_image_optimizer_cloud_key" name="ewww_image_optimizer_cloud_key" value="<?php echo ewww_image_optimizer_get_option('ewww_image_optimizer_cloud_key'); ?>" size="32" /> <?php _e('API Key will be validated when you save your settings.', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?> <a href="http://www.exactlywww.com/cloud/"><?php _e('Purchase a key.', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?></a></td></tr>
-				<tr><th><label for="ewww_image_optimizer_cloud_jpg">JPG <?php _e('cloud optimization', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?></label></th><td><input type="checkbox" id="ewww_image_optimizer_cloud_jpg" name="ewww_image_optimizer_cloud_jpg" value="true" <?php if (ewww_image_optimizer_get_option('ewww_image_optimizer_cloud_jpg') == TRUE) { ?>checked="true"<?php } ?> /></td></tr>
-				<tr><th><label for="ewww_image_optimizer_cloud_png">PNG <?php _e('cloud optimization', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?></label></th><td><input type="checkbox" id="ewww_image_optimizer_cloud_png" name="ewww_image_optimizer_cloud_png" value="true" <?php if (ewww_image_optimizer_get_option('ewww_image_optimizer_cloud_png') == TRUE) { ?>checked="true"<?php } ?> />&emsp;&emsp;
-					<label for="ewww_image_optimizer_cloud_png_compress"><?php _e('extra compression (slower)', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?></label> <input type="checkbox" id="ewww_image_optimizer_cloud_png_compress" name="ewww_image_optimizer_cloud_png_compress" value="true" <?php if (ewww_image_optimizer_get_option('ewww_image_optimizer_cloud_png_compress') == TRUE) { ?>checked="true"<?php } ?> /></td></tr>
-				<tr><th><label for="ewww_image_optimizer_cloud_gif">GIF <?php _e('cloud optimization', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?></label></th><td><input type="checkbox" id="ewww_image_optimizer_cloud_gif" name="ewww_image_optimizer_cloud_gif" value="true" <?php if (ewww_image_optimizer_get_option('ewww_image_optimizer_cloud_gif') == TRUE) { ?>checked="true"<?php } ?> /></td></tr>
-			</table>
-			<h3><?php _e('General Settings', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?></h3>
-			<table class="form-table">
-				<tr><th><label for="ewww_image_optimizer_debug"><?php _e('Debugging', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?></label></th><td><input type="checkbox" id="ewww_image_optimizer_debug" name="ewww_image_optimizer_debug" value="true" <?php if (ewww_image_optimizer_get_option('ewww_image_optimizer_debug') == TRUE) { ?>checked="true"<?php } ?> /> <?php _e('Use this to provide information for support purposes, or if you feel comfortable digging around in the code to fix a problem you are experiencing.', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?></td></tr>
-				<tr><th><label for="ewww_image_optimizer_auto"><?php _e('Scheduled optimization', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?></label></th><td><input type="checkbox" id="ewww_image_optimizer_auto" name="ewww_image_optimizer_auto" value="true" <?php if (ewww_image_optimizer_get_option('ewww_image_optimizer_auto') == TRUE) { ?>checked="true"<?php } ?> /> <?php _e('This will enable scheduled optimization of unoptimized images for your theme, buddypress, and any additional folders you have configured below. Runs hourly: wp_cron only runs when your site is visited, so it may be even longer between optimizations.', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?></td></tr>
-				<tr><th><label for="ewww_image_optimizer_aux_paths"><?php _e('Folders to optimize', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?></label></th><td><?php printf(__('One path per line, must be within %s. Use full paths, not relative paths.', EWWW_IMAGE_OPTIMIZER_DOMAIN), ABSPATH); ?><br />
-					<textarea id="ewww_image_optimizer_aux_paths" name="ewww_image_optimizer_aux_paths" rows="3" cols="60"><?php if ($aux_paths = ewww_image_optimizer_get_option('ewww_image_optimizer_aux_paths')) { foreach ($aux_paths as $path) echo "$path\n"; } ?></textarea>
-					<p class="description">Provide paths containing images to be optimized using scheduled optimization or 'Optimize More' in the Tools menu.<br>
-					<b><a href="http://wordpress.org/support/plugin/ewww-image-optimizer-cloud"><?php _e('Please submit a support request in the forums to have folders created by a particular plugin auto-included in the future.', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?></a></b></p></td></tr>
-				<tr><th><label for="ewww_image_optimizer_delay"><?php _e('Bulk Delay', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?></label></th><td><input type="text" id="ewww_image_optimizer_delay" name="ewww_image_optimizer_delay" size="5" value="<?php echo ewww_image_optimizer_get_option('ewww_image_optimizer_delay'); ?>"> <?php _e('Choose how long to pause between images (in seconds, 0 = disabled)', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?></td></tr>
-				<!--                <tr><th><label for="ewww_image_optimizer_interval"><?php _e('Image Batch Size', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?></label></th><td><input type="text" id="ewww_image_optimizer_interval" name="ewww_image_optimizer_interval" size="5" value="<?php echo ewww_image_optimizer_get_option('ewww_image_optimizer_interval'); ?>"> <?php _e('Choose how many images should be processed before each delay', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?></td></tr>-->
-				<tr><th><label for="ewww_image_optimizer_skip_size"><?php _e('Skip Images', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?></label></th><td><input type="text" id="ewww_image_optimizer_skip_size" name="ewww_image_optimizer_skip_size" size="8" value="<?php echo ewww_image_optimizer_get_option('ewww_image_optimizer_skip_size'); ?>"> <?php _e('Do not optimize images smaller than this (in bytes)', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?></td></tr>
-				<tr><th><label for="ewww_image_optimizer_lossy_skip_full"><?php _e('Exclude full-size images from lossy optimization', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?></label></th><td><input type="checkbox" id="ewww_image_optimizer_lossy_skip_full" name="ewww_image_optimizer_lossy_skip_full" value="true" <?php if (ewww_image_optimizer_get_option('ewww_image_optimizer_lossy_skip_full') == TRUE) { ?>checked="true"<?php } ?> /></td></tr> 
-<?php	if (class_exists('Cloudinary') && Cloudinary::config_get("api_secret")) { ?>
-				<tr><th><label for="ewww_image_optimizer_enable_cloudinary"><?php _e('Automatic Cloudinary upload', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?></label></th><td><input type="checkbox" id="ewww_image_optimizer_enable_cloudinary" name="ewww_image_optimizer_enable_cloudinary" value="true" <?php if (ewww_image_optimizer_get_option('ewww_image_optimizer_enable_cloudinary') == TRUE) { ?>checked="true"<?php } ?> /> <?php _e('When enabled, uploads to the Media Library will be transferred to Cloudinary after optimization. Cloudinary generates resizes, so only the full-size image is uploaded.', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?></td></tr>
-<?php	} ?>
-			</table>
-			<h3><?php _e('Optimization Settings', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?></h3>
-			<table class="form-table">
-				<tr><th><label for="ewww_image_optimizer_jpegtran_copy"><?php _e('Remove metadata', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?></label></th>
-				<td><input type="checkbox" id="ewww_image_optimizer_jpegtran_copy" name="ewww_image_optimizer_jpegtran_copy" value="true" <?php if (ewww_image_optimizer_get_option('ewww_image_optimizer_jpegtran_copy') == TRUE) { ?>checked="true"<?php } ?> /> <?php _e('This will remove ALL metadata: EXIF and comments.', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?></td></tr>
-				<tr><th><label for="ewww_image_optimizer_png_lossy"><?php _e('Lossy PNG optimization', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?></label></th><td><input type="checkbox" id="ewww_image_optimizer_png_lossy" name="ewww_image_optimizer_png_lossy" value="true" <?php if (ewww_image_optimizer_get_option('ewww_image_optimizer_png_lossy') == TRUE) { ?>checked="true"<?php } ?> /> <b><?php _e('WARNING:', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?></b> <?php _e('While most users will not notice a difference in image quality, lossy means there IS a loss in image quality.', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?></td></tr>
-			</table>
-			<h3><?php _e('Conversion Settings', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?></h3>
-			<p><?php _e('Conversion is only available for images in the Media Library. By default, all images have a link available in the Media Library for one-time conversion. Turning on individual conversion operations below will enable conversion filters any time an image is uploaded or modified.', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?><br />
-				<b><?php _e('NOTE:', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?></b> <?php _e('The plugin will attempt to update image locations for any posts that contain the images. You may still need to manually update locations/urls for converted images.', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?> 
-			</p>
-			<table class="form-table">
-				<tr><th><label for="ewww_image_optimizer_disable_convert_links"><?php _e('Hide Conversion Links', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?></label</th><td><input type="checkbox" id="ewww_image_optimizer_disable_convert_links" name="ewww_image_optimizer_disable_convert_links" <?php if (ewww_image_optimizer_get_option('ewww_image_optimizer_disable_convert_links') == TRUE) { ?>checked="true"<?php } ?> /> <?php _e('Site or Network admins can use this to prevent other users from using the conversion links in the Media Library which bypass the settings below.', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?></td></tr>
-				<tr><th><label for="ewww_image_optimizer_delete_originals"><?php _e('Delete originals', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?></label></th><td><input type="checkbox" id="ewww_image_optimizer_delete_originals" name="ewww_image_optimizer_delete_originals" <?php if (ewww_image_optimizer_get_option('ewww_image_optimizer_delete_originals') == TRUE) { ?>checked="true"<?php } ?> /> <?php _e('This will remove the original image from the server after a successful conversion.', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?></td></tr>
-				<tr><th><label for="ewww_image_optimizer_jpg_to_png"><?php printf(__('enable %s to %s conversion', EWWW_IMAGE_OPTIMIZER_DOMAIN), 'JPG', 'PNG'); ?></label></th><td><span><input type="checkbox" id="ewww_image_optimizer_jpg_to_png" name="ewww_image_optimizer_jpg_to_png" <?php if (ewww_image_optimizer_get_option('ewww_image_optimizer_jpg_to_png') == TRUE) { ?>checked="true"<?php } ?> /> <b><?php _e('WARNING:', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?></b> <?php _e('Removes metadata and increases cpu usage dramatically.', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?></span>
-				<p class="description"><?php _e('PNG is generally much better than JPG for logos and other images with a limited range of colors. Checking this option will slow down JPG processing significantly, and you may want to enable it only temporarily.', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?></p></td></tr>
-				<tr><th><label for="ewww_image_optimizer_png_to_jpg"><?php printf(__('enable %s to %s conversion', EWWW_IMAGE_OPTIMIZER_DOMAIN), 'PNG', 'JPG'); ?></label></th><td><span><input type="checkbox" id="ewww_image_optimizer_png_to_jpg" name="ewww_image_optimizer_png_to_jpg" <?php if (ewww_image_optimizer_get_option('ewww_image_optimizer_png_to_jpg') == TRUE) { ?>checked="true"<?php } ?> /> <b><?php _e('WARNING:', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?></b> <?php _e('This is not a lossless conversion.', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?></span>
-				<p class="description"><?php _e('JPG is generally much better than PNG for photographic use because it compresses the image and discards data. PNGs with transparency are not converted by default.', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?></p>
-				<span><label for="ewww_image_optimizer_jpg_background"> <?php _e('JPG background color:', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?></label> #<input type="text" id="ewww_image_optimizer_jpg_background" name="ewww_image_optimizer_jpg_background" size="6" value="<?php echo ewww_image_optimizer_jpg_background(); ?>" /> <span style="padding-left: 12px; font-size: 12px; border: solid 1px #555555; background-color: #<? echo ewww_image_optimizer_jpg_background(); ?>">&nbsp;</span> <?php _e('HEX format (#123def)', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?>.</span>
-				<p class="description"><?php _e('Background color is used only if the PNG has transparency. Leave this value blank to skip PNGs with transparency.', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?></p>
-				<span><label for="ewww_image_optimizer_jpg_quality"><?php _e('JPG quality level:', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?></label> <input type="text" id="ewww_image_optimizer_jpg_quality" name="ewww_image_optimizer_jpg_quality" class="small-text" value="<?php echo ewww_image_optimizer_jpg_quality(); ?>" /> <?php _e('Valid values are 1-100.', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?></span>
-				<p class="description"><?php _e('If JPG quality is blank, the plugin will attempt to set the optimal quality level or default to 92. Remember, this is a lossy conversion, so you are losing pixels, and it is not recommended to actually set the level here unless you want noticable loss of image quality.', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?></p></td></tr>
-				<tr><th><label for="ewww_image_optimizer_gif_to_png"><?php printf(__('enable %s to %s conversion', EWWW_IMAGE_OPTIMIZER_DOMAIN), 'GIF', 'PNG'); ?></label></th><td><span><input type="checkbox" id="ewww_image_optimizer_gif_to_png" name="ewww_image_optimizer_gif_to_png" <?php if (ewww_image_optimizer_get_option('ewww_image_optimizer_gif_to_png') == TRUE) { ?>checked="true"<?php } ?> /> <?php _e('No warnings here, just do it.', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?></span>
-				<p class="description"> <?php _e('PNG is generally better than GIF, but animated images cannot be converted.', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?></p></td></tr>
-			</table>
-			<p class="submit"><input type="submit" class="button-primary" value="<?php _e('Save Changes', EWWW_IMAGE_OPTIMIZER_DOMAIN); ?>" /></p>
-		</form></div><!-- end container left -->
-		<div id="ewww-container-right" style="border: 1px solid #ccc; padding: 0 8px; border-radius: 12px; float: right; margin-left: -200px; display: inline-block; width: 174px;"> 
-			<h3>Support EWWW I.O.</h3> 
-			<p>Would you like to help support development of this plugin?<br />
-			<p>Contribute directly by <a href="https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=MKMQKCBFFG3WW">donating with Paypal</a>.<br />
-			<b>OR</b><br />
-			Use any of these referral links to show your appreciation:</p> 
-			<p><b>Web Hosting:</b><br> 
-				<a href="http://www.dreamhost.com/r.cgi?132143">Dreamhost</a><br> 
-				<a href="http://www.bluehost.com/track/nosilver4u">Bluehost</a><br> 
-				<a href="http://www.liquidweb.com/?RID=nosilver4u">liquidweb</a><br> 
-				<a href="http://www.stormondemand.com/?RID=nosilver4u">Storm on Demand</a> 
-			</p> 
-			<p><b>VPS:</b><br>
-				<a href="http://www.bluehost.com/track/nosilver4u?page=/vps">Bluehost</a><br> 
-				<a href="https://www.digitalocean.com/?refcode=89ef0197ec7e">DigitalOcean</a><br> 
-				<a href="https://clientarea.ramnode.com/aff.php?aff=1469">RamNode</a> 
-			</p> 
-			<p><b>CDN Networks:</b><br>Add the MaxCDN content delivery network to increase website speeds dramatically! <a target="_blank" href="http://tracking.maxcdn.com/c/91625/36539/378">Sign Up Now and Save 25%</a> (100% Money Back Guarantee for 30 days). Integrate it within Wordpress using the W3 Total Cache plugin.</p> 
-		</div>
-	</div>
-	<?php
+	$ewww_debug .= '<b>ewww_image_optimizer_webp_create()</b><br>';
+	// change the file extension
+	$webpfile = preg_replace('/\.\w+$/', '.webp', $file);
+	if ( file_exists( $webpfile ) ) {
+		return;
+	}
+	ewww_image_optimizer_cloud_optimizer($file, $type, false, $webpfile, 'image/webp');
+	if ( file_exists( $webpfile ) && $orig_size < filesize( $webpfile ) ) {
+		$ewww_debug .= 'webp file was too big, deleting<br>';
+		unlink( $webpfile );
+	}
 }
-
