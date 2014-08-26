@@ -20,12 +20,27 @@ class EWWWIO_GD_Editor extends WP_Image_Editor_GD {
                         if ( function_exists('imageistruecolor') && ! imageistruecolor( $image ) )
                                 imagetruecolortopalette( $image, false, imagecolorstotal( $image ) );
 
-                        if ( ! $this->make_image( $filename, 'imagepng', array( $image, $filename ) ) )
+			if ( property_exists( 'WP_Image_Editor', 'quality' ) ) {
+				$compression_level = floor( ( 101 - $this->quality ) * 0.09 );
+				$ewww_debug .= "png quality = " . $this->quality . "<br>";
+			} else {
+				$compression_level = floor( ( 101 - false ) * 0.09 );
+			}
+
+                        if ( ! $this->make_image( $filename, 'imagepng', array( $image, $filename, $compression_level ) ) ) {
                                 return new WP_Error( 'image_save_error', __('Image Editor Save Failed') );
+			}
                 }
                 elseif ( 'image/jpeg' == $mime_type ) {
-                        if ( ! $this->make_image( $filename, 'imagejpeg', array( $image, $filename, apply_filters( 'jpeg_quality', $this->quality, 'image_resize' ) ) ) )
-                                return new WP_Error( 'image_save_error', __('Image Editor Save Failed') );
+			if ( method_exists( $this, 'get_quality' ) ) {
+				if ( ! $this->make_image( $filename, 'imagejpeg', array( $image, $filename, $this->get_quality() ) ) ) {
+					return new WP_Error( 'image_save_error', __('Image Editor Save Failed') );
+				}
+			} else {
+	                        if ( ! $this->make_image( $filename, 'imagejpeg', array( $image, $filename, apply_filters( 'jpeg_quality', $this->quality, 'image_resize' ) ) ) ) {
+        	                        return new WP_Error( 'image_save_error', __('Image Editor Save Failed') );
+				}
+			}
                 }
                 else {
                         return new WP_Error( 'image_save_error', __('Image Editor Save Failed') );
@@ -41,11 +56,11 @@ class EWWWIO_GD_Editor extends WP_Image_Editor_GD {
 		$ewww_debug = "$ewww_debug image editor size: $image_size <br>";
 		ewww_image_optimizer_debug_log();
                 return array(
-                        'path' => $filename,
-                        'file' => wp_basename( apply_filters( 'image_make_intermediate_size', $filename ) ),
-                        'width' => $this->size['width'],
-                        'height' => $this->size['height'],
-                        'mime-type'=> $mime_type,
+                        'path'      => $filename,
+                        'file'      => wp_basename( apply_filters( 'image_make_intermediate_size', $filename ) ),
+                        'width'     => $this->size['width'],
+                        'height'    => $this->size['height'],
+                        'mime-type' => $mime_type,
                 );
 	}
 }
@@ -87,10 +102,10 @@ class EWWWIO_Imagick_Editor extends WP_Image_Editor_Imagick {
 		ewww_image_optimizer_debug_log();
 		$ewww_debug = '';
                 return array(
-                        'path' => $filename,
-                        'file' => wp_basename( apply_filters( 'image_make_intermediate_size', $filename ) ),
-                        'width' => $this->size['width'],
-                        'height' => $this->size['height'],
+                        'path'      => $filename,
+                        'file'      => wp_basename( apply_filters( 'image_make_intermediate_size', $filename ) ),
+                        'width'     => $this->size['width'],
+                        'height'    => $this->size['height'],
                         'mime-type' => $mime_type,
                 );
         }
@@ -134,10 +149,10 @@ if (class_exists('WP_Image_Editor_Gmagick')) {
 			$ewww_debug = '';
 
 			return array(
-				'path' => $filename,
-				'file' => wp_basename( apply_filters( 'image_make_intermediate_size', $filename ) ),
-				'width' => $this->size['width'],
-				'height' => $this->size['height'],
+				'path'      => $filename,
+				'file'      => wp_basename( apply_filters( 'image_make_intermediate_size', $filename ) ),
+				'width'     => $this->size['width'],
+				'height'    => $this->size['height'],
 				'mime-type' => $mime_type,
 			);
 		}
