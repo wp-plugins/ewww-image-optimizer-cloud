@@ -2,8 +2,8 @@
 Contributors: nosilver4u
 Tags: images, image, attachments, attachment, optimize, optimization, nextgen, buddypress, flagallery, flash-gallery, lossless, photos, photo, picture, pictures, seo, compression, image-store, imstore, slider, image editor, gmagick, wp-symposium, meta-slider, metaslider, cloud
 Requires at least: 3.5
-Tested up to: 3.9.1
-Stable tag: 1.9.3
+Tested up to: 3.9.2
+Stable tag: 2.0.0
 License: GPLv3
 
 Reduce file sizes for images within WordPress including NextGEN, GRAND FlAGallery and more via paid cloud service.
@@ -101,18 +101,25 @@ Each image is given 50 seconds to complete (which actually doesn't include time 
 
 That's not a question, but since I made it up, I'll answer it. See the Image Optimization sections for [Yslow - Yahoo](http://developer.yahoo.com/performance/rules.html#opt_images) and [Google PageSpeed](https://developers.google.com/speed/docs/best-practices/payload#CompressImages). Pngout was suggested by a user and in tests optimizes better than Optipng, and best (usually) when they are used together.
 
-== Screenshots ==
-
-1. Plugin settings page.
-2. Additional optimize column added to media listing. You can see your savings, manually optimize individual images, and restore originals (converted only).
-3. Bulk optimization page. You can optimize all your images at once and resume a previous bulk optimization. This is very useful for existing blogs that have lots of images.
-
 == Changelog ==
 
-= 1.9.4 =
+= 2.0.0 =
+* NOTE: while this is a release with new features, it is not a rewrite, only the next number in the decimal system, just like the WP numbering scheme
 * fixed: multi-site was not savings settings for cloud-only plugin
+* added: webp generation (wahooooooooo)
+* added: jpegmini support (more wahooooo, but requires a cloud subscription)
+* fixed: jpeg quality not being set properly for 4.0 on resizes
+* changed: settings page, feel free to give me feedback on the new menubar
 * fixed: some settings not being validated properly for multi-site
 * added: up to 30 second retry when bulk optimize is interrupted
+* changed: various code cleanup
+* changed: better verification when saving settings for multi-site
+* changed: all cloud transactions are now secured (https)
+* fixed: use nextgen2's unserialize function to query metadata during bulk optimize
+* added: Polish translation
+* updated: Dutch and Romanian translations
+* updated: Tutorial videos on the Installation page have updated finally
+* fixed: import failed if nextgen classes aren't available during import
 
 = 1.9.3 =
 * added: fallback mode when totals for resizes and unoptimized images cannot be determined by the bulk optimize tool
@@ -480,6 +487,9 @@ That's not a question, but since I made it up, I'll answer it. See the Image Opt
 * First release (forked from CW Image Optimizer)
 
 == Upgrade Notice ==
+
+= 2.0.0 =
+* You must upgrade to this version before uploading JPG images in Wordpress 4.0 to avoid serious quality loss in your resizes
 
 = 1.8.2 = 
 * All cloud users must apply this update to avoid service degradation
