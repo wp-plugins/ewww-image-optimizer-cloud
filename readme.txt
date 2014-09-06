@@ -2,7 +2,7 @@
 Contributors: nosilver4u
 Tags: images, image, attachments, attachment, optimize, optimization, nextgen, buddypress, flagallery, flash-gallery, lossless, photos, photo, picture, pictures, seo, compression, image-store, imstore, slider, image editor, gmagick, wp-symposium, meta-slider, metaslider, cloud
 Requires at least: 3.5
-Tested up to: 3.9.2
+Tested up to: 4.0
 Stable tag: 2.0.0
 License: GPLv3
 
@@ -102,6 +102,17 @@ Each image is given 50 seconds to complete (which actually doesn't include time 
 That's not a question, but since I made it up, I'll answer it. See the Image Optimization sections for [Yslow - Yahoo](http://developer.yahoo.com/performance/rules.html#opt_images) and [Google PageSpeed](https://developers.google.com/speed/docs/best-practices/payload#CompressImages). Pngout was suggested by a user and in tests optimizes better than Optipng, and best (usually) when they are used together.
 
 == Changelog ==
+
+= IMPORTANT =
+NOTE: The WebP naming scheme has been changed to avoid conflicts when JPGs and PNGs have identical filenames. You will need to update your rewrite rules via the settings page, and run the WebP upgrade script. Every image in the Media Library with a WebP version using the old naming scheme will have a link to the upgrade process (in list view, not grid view).
+
+= 2.0.1 =
+* fixed: naming conflict with webp when jpg/png files have identical names, read NOTE above
+* fixed: folders to optimize are not retrieved properly on settings page
+* fixed: prevent excess calls for webp conversion
+* fixed: wpdb->prepare should have two arguments
+* updated: Spanish translation
+* added: Russian translation
 
 = 2.0.0 =
 * NOTE: while this is a release with new features, it is not a rewrite, only the next number in the decimal system, just like the WP numbering scheme

@@ -1,7 +1,7 @@
 <?php
 // common functions for Standard and Cloud plugins
 // TODO: check all comments to make sure they are actually useful...
-define('EWWW_IMAGE_OPTIMIZER_VERSION', '200.0');
+define('EWWW_IMAGE_OPTIMIZER_VERSION', '200.2');
 
 // initialize debug global
 $disabled = ini_get('disable_functions');
@@ -84,9 +84,6 @@ if (is_plugin_active('flash-album-gallery/flag.php') || (function_exists('is_plu
 function ewww_image_optimizer_init() {
 	global $ewww_debug;
 	$ewww_debug .= "<b>ewww_image_optimizer_init()</b><br>";
-	if (preg_match('/image\/webp/', $_SERVER['HTTP_ACCEPT'])) {
-		//echo '<!-- webpsupported -->';
-	}
 	if (get_option('ewww_image_optimizer_version') < EWWW_IMAGE_OPTIMIZER_VERSION) {
 		ewww_image_optimizer_install_table();
 		ewww_image_optimizer_set_defaults();
@@ -216,14 +213,12 @@ function ewww_image_optimizer_admin_init() {
 	// require the files that do the bulk processing 
 	require_once(EWWW_IMAGE_OPTIMIZER_PLUGIN_PATH . 'bulk.php'); 
 	require_once(EWWW_IMAGE_OPTIMIZER_PLUGIN_PATH . 'aux-optimize.php'); 
+	require_once(EWWW_IMAGE_OPTIMIZER_PLUGIN_PATH . 'mwebp.php');
 	// queue the function that contains custom styling for our progressbars, but only in wp 3.8+ 
 	global $wp_version; 
 	if ( substr($wp_version, 0, 3) >= 3.8 ) {  
 		add_action('admin_enqueue_scripts', 'ewww_image_optimizer_progressbar_style'); 
 	}
-/*	if ( ! empty( $_POST['ewww_webp_rewrite'] ) ) {
-		ewww_image_optimizer_webp_rewrite();
-	}*/
 }
 
 // sets all the tool constants to false
@@ -417,8 +412,7 @@ function ewww_image_optimizer_network_deactivate($network_wide) {
 	global $wpdb;
 	wp_clear_scheduled_hook('ewww_image_optimizer_auto');
 	if ($network_wide) {
-		// TODO: check all prepare statements to make sure they are preparing something: http://make.wordpress.org/core/2012/12/12/php-warning-missing-argument-2-for-wpdb-prepare/
-		$query = $wpdb->prepare("SELECT blog_id FROM $wpdb->blogs WHERE site_id = '$wpdb->siteid'");
+		$query = $wpdb->prepare("SELECT blog_id FROM $wpdb->blogs WHERE site_id = %d", $wpdb->siteid);
 		$blogs = $wpdb->get_results($query, ARRAY_A);
 		foreach ($blogs as $blog) {
 			switch_to_blog($blog['blog_id']);
@@ -448,8 +442,9 @@ function ewww_image_optimizer_network_admin_menu() {
 function ewww_image_optimizer_admin_menu() {
 	// adds bulk optimize to the media library menu
 	$ewww_bulk_page = add_media_page(__('Bulk Optimize', EWWW_IMAGE_OPTIMIZER_DOMAIN), __('Bulk Optimize', EWWW_IMAGE_OPTIMIZER_DOMAIN), 'edit_others_posts', 'ewww-image-optimizer-bulk', 'ewww_image_optimizer_bulk_preview');
+	$ewww_webp_migrate_page = add_submenu_page( null, __( 'Migrate WebP Images', EWWW_IMAGE_OPTIMIZER_DOMAIN ), __('Migrate WebP Images', EWWW_IMAGE_OPTIMIZER_DOMAIN), 'edit_others_posts', 'ewww-image-optimizer-webp-migrate', 'ewww_image_optimizer_webp_migrate_preview');
 	add_action('admin_footer-' . $ewww_bulk_page, 'ewww_image_optimizer_debug');
-	if (!function_exists('is_plugin_active_for_network') || !is_plugin_active_for_network(plugin_basename(EWWW_IMAGE_OPTIMIZER_PLUGIN_FILE))) { 
+	if ( ! function_exists( 'is_plugin_active_for_network' ) || ! is_plugin_active_for_network( plugin_basename( EWWW_IMAGE_OPTIMIZER_PLUGIN_FILE ) ) ) { 
 		// add options page to the settings menu
 		$ewww_options_page = add_options_page(
 			'EWWW Image Optimizer',		//Title
@@ -1040,7 +1035,7 @@ function ewww_image_optimizer_cloud_optimizer($file, $type, $convert = false, $n
 	} else {
 		$lossy = 0;
 	}
-	if ( $newtype == 'image/webp' ) {
+	if ( $newtype == 'image/webp' && ewww_image_optimizer_get_option( 'ewww_image_optimizer_webp' ) ) {
 		$webp = 1;
 	} else {
 		$webp = 0;
@@ -1789,10 +1784,18 @@ function ewww_image_optimizer_custom_column($column_name, $id) {
 					$id,
 					__('Restore original', EWWW_IMAGE_OPTIMIZER_DOMAIN));
 			}
+
+			// link to webp upgrade script
+			$oldwebpfile = preg_replace('/\.\w+$/', '.webp', $file_path);
+			if (file_exists( $oldwebpfile ) ) {
+				echo "<br><a href='options.php?page=ewww-image-optimizer-webp-migrate'>Run WebP upgrade</a>";
+			}
+
 			// determine filepath for webp
-			$webpfile = preg_replace('/\.\w+$/', '.webp', $file_path);
+			$webpfile = $file_path . '.webp';
+			//$webpfile = preg_replace('/\.\w+$/', '.webp', $file_path);
 			if ( file_exists( $webpfile ) ) {
-				$webpurl = preg_replace( '/\.\w+$/', '.webp', wp_get_attachment_url( $id ) );
+				$webpurl = wp_get_attachment_url( $id ) . '.webp';
 				// get a human readable filesize
 				$webp_size = size_format(filesize($webpfile), 2);
 				$webp_size = preg_replace('/\.00 B /', ' B', $webp_size);
@@ -1938,15 +1941,19 @@ function ewww_image_optimizer_webp_rewrite_verify() {
 		"RewriteEngine On",
 		"RewriteCond %{HTTP_ACCEPT} image/webp",
 		"RewriteCond %{REQUEST_FILENAME} (.*)\.(jpe?g|png)$",
-		"RewriteCond %1\.webp -f",
-		"RewriteRule (.+)\.(jpe?g|png)$ $1.webp [T=image/webp,E=accept:1]",
+		"RewriteCond %{REQUEST_FILENAME}.webp -f",
+		"RewriteRule (.+)\.(jpe?g|png)$ %{REQUEST_FILENAME}.webp [T=image/webp,E=accept:1]",
 		"</IfModule>",
 		"<IfModule mod_headers.c>",
 		"Header append Vary Accept env=REDIRECT_accept",
 		"</IfModule>",
 		"AddType image/webp .webp",
-	); 
-	return array_diff( $ewww_rules, $current_rules );
+	);
+	if ( array_diff( $ewww_rules, $current_rules ) ) {
+		return $ewww_rules;
+	} else {
+		return;
+	}
 }
 
 // displays the EWWW IO options and provides one-click install for the optimizer utilities
@@ -2238,8 +2245,8 @@ function ewww_image_optimizer_options () {
 				"RewriteEngine On\n" .
 				"RewriteCond %{HTTP_ACCEPT} image/webp\n" .
 				"RewriteCond %{REQUEST_FILENAME} (.*)\.(jpe?g|png)$\n" .
-				"RewriteCond %1\.webp -f\n" .
-				"RewriteRule (.+)\.(jpe?g|png)$ $1.webp [T=image/webp,E=accept:1]\n" .
+				"RewriteCond %{REQUEST_FILENAME}\.webp -f\n" .
+				"RewriteRule (.+)\.(jpe?g|png)$ %{REQUEST_FILENAME}.webp [T=image/webp,E=accept:1]\n" .
 				"&lt;/IfModule&gt;\n" .
 				"&lt;IfModule mod_headers.c&gt;\n" .
 				"Header append Vary Accept env=REDIRECT_accept\n" .

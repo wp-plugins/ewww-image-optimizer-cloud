@@ -344,8 +344,7 @@ function ewww_image_optimizer($file, $gallery_type, $converted, $new, $fullsize 
 function ewww_image_optimizer_webp_create( $file, $orig_size, $type, $tool ) {
 	global $ewww_debug;
 	$ewww_debug .= '<b>ewww_image_optimizer_webp_create()</b><br>';
-	// change the file extension
-	$webpfile = preg_replace('/\.\w+$/', '.webp', $file);
+	$webpfile = $file . '.webp';
 	if ( file_exists( $webpfile ) ) {
 		return;
 	}
