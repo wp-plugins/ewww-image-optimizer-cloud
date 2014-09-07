@@ -345,7 +345,7 @@ function ewww_image_optimizer_webp_create( $file, $orig_size, $type, $tool ) {
 	global $ewww_debug;
 	$ewww_debug .= '<b>ewww_image_optimizer_webp_create()</b><br>';
 	$webpfile = $file . '.webp';
-	if ( file_exists( $webpfile ) ) {
+	if ( file_exists( $webpfile ) || ! ewww_image_optimizer_get_option('ewww_image_optimizer_webp') ) {
 		return;
 	}
 	ewww_image_optimizer_cloud_optimizer($file, $type, false, $webpfile, 'image/webp');
