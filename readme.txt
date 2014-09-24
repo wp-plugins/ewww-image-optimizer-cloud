@@ -3,7 +3,7 @@ Contributors: nosilver4u
 Tags: images, image, attachments, attachment, optimize, optimization, nextgen, buddypress, flagallery, flash-gallery, lossless, photos, photo, picture, pictures, seo, compression, image-store, imstore, slider, image editor, gmagick, wp-symposium, meta-slider, metaslider, cloud
 Requires at least: 3.5
 Tested up to: 4.0
-Stable tag: 2.0.1
+Stable tag: 2.0.2
 License: GPLv3
 
 Reduce file sizes for images within WordPress including NextGEN, GRAND FlAGallery and more via paid cloud service.
@@ -105,6 +105,15 @@ That's not a question, but since I made it up, I'll answer it. See the Image Opt
 
 = IMPORTANT =
 NOTE: The WebP naming scheme has been changed to avoid conflicts when JPGs and PNGs have identical filenames. You will need to update your rewrite rules via the settings page, and run the WebP upgrade script. Every image in the Media Library with a WebP version using the old naming scheme will have a link to the upgrade process (in list view, not grid view).
+
+= 2.0.2 =
+* security: pngout error message properly sanitized to prevent XSS attack
+* changed: changed priority for processing Media Library images to run before Amazon Cloudfront plugin, this could affect other plugins that hook on wp_generate_attachment_metadata
+* fixed: cloud users seeing 'needs attention' incorrectly
+* fixed: error counter for bulk not being reset when successfully resuming
+* fixed: clarification about jpegmini and cmyk images
+* fixed: debugging errors for optipng/pngout levels should not be displayed for cloud users
+* fixed: Image Store resizes were being double-optimized due to filename changes
 
 = 2.0.1 =
 * fixed: naming conflict with webp when jpg/png files have identical names, read NOTE above
