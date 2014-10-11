@@ -181,6 +181,20 @@ function ewww_image_optimizer($file, $gallery_type, $converted, $new, $fullsize 
 	// get the original image size
 	$orig_size = filesize($file);
 	$ewww_debug .= "original filesize: $orig_size<br>";
+	if ( $orig_size < ewww_image_optimizer_get_option( 'ewww_image_optimizer_skip_size' ) ) {
+		// tell the user optimization was skipped
+		$msg = __( "Optimization skipped", EWWW_IMAGE_OPTIMIZER_DOMAIN );
+		$ewww_debug .= "optimization bypassed due to filesize: $file <br>";
+		// send back the above message
+		return array(false, $msg, $converted, $file);
+	}
+	if ( $type == 'image/png' && ewww_image_optimizer_get_option( 'ewww_image_optimizer_skip_png_size' ) && $orig_size > ewww_image_optimizer_get_option( 'ewww_image_optimizer_skip_png_size' ) ) {
+		// tell the user optimization was skipped
+		$msg = __( "Optimization skipped", EWWW_IMAGE_OPTIMIZER_DOMAIN );
+		$ewww_debug .= "optimization bypassed due to filesize: $file <br>";
+		// send back the above message
+		return array(false, $msg, $converted, $file);
+	}
 	// initialize $new_size with the original size
 //	$new_size = $orig_size;
 	$new_size = 0;
