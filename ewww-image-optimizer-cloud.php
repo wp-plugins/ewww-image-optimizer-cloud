@@ -1,7 +1,7 @@
 <?php
 /**
  * Integrate cloud image optimization into WordPress.
- * @version 2.0.0
+ * @version 2.1.0
  * @package EWWW_Image_Optimizer_Cloud
  */
 /*
@@ -10,7 +10,7 @@ Plugin URI: http://www.exactlywww.com/cloud/
 Description: Reduce file sizes for images within WordPress including NextGEN Gallery and GRAND FlAGallery via paid cloud service.
 Author: Shane Bishop
 Text Domain: ewww-image-optimizer-cloud
-Version: 2.0.0
+Version: 2.1.0
 Author URI: http://www.shanebishop.net/
 License: GPLv3
 */
@@ -181,6 +181,20 @@ function ewww_image_optimizer($file, $gallery_type, $converted, $new, $fullsize 
 	// get the original image size
 	$orig_size = filesize($file);
 	$ewww_debug .= "original filesize: $orig_size<br>";
+	if ( $orig_size < ewww_image_optimizer_get_option( 'ewww_image_optimizer_skip_size' ) ) {
+		// tell the user optimization was skipped
+		$msg = __( "Optimization skipped", EWWW_IMAGE_OPTIMIZER_DOMAIN );
+		$ewww_debug .= "optimization bypassed due to filesize: $file <br>";
+		// send back the above message
+		return array(false, $msg, $converted, $file);
+	}
+	if ( $type == 'image/png' && ewww_image_optimizer_get_option( 'ewww_image_optimizer_skip_png_size' ) && $orig_size > ewww_image_optimizer_get_option( 'ewww_image_optimizer_skip_png_size' ) ) {
+		// tell the user optimization was skipped
+		$msg = __( "Optimization skipped", EWWW_IMAGE_OPTIMIZER_DOMAIN );
+		$ewww_debug .= "optimization bypassed due to filesize: $file <br>";
+		// send back the above message
+		return array(false, $msg, $converted, $file);
+	}
 	// initialize $new_size with the original size
 //	$new_size = $orig_size;
 	$new_size = 0;
