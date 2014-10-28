@@ -1,9 +1,9 @@
 === EWWW Image Optimizer Cloud ===
 Contributors: nosilver4u
-Tags: images, image, attachments, attachment, optimize, optimization, nextgen, buddypress, flagallery, flash-gallery, lossless, photos, photo, picture, pictures, seo, compression, image-store, imstore, slider, image editor, gmagick, wp-symposium, meta-slider, metaslider, cloud
+Tags: images, image, attachments, attachment, optimize, optimization, lossless, photos, photo, picture, pictures, seo, compression, image editor, gmagick, cloud
 Requires at least: 3.5
 Tested up to: 4.0
-Stable tag: 2.0.2
+Stable tag: 2.1.0
 License: GPLv3
 
 Reduce file sizes for images within WordPress including NextGEN, GRAND FlAGallery and more via paid cloud service.
@@ -106,6 +106,18 @@ JPEGmini and Pngquant were recommended by EWWW IO users. JPEGmini is the best lo
 
 = IMPORTANT =
 NOTE: The WebP naming scheme has been changed to avoid conflicts when JPGs and PNGs have identical filenames. You will need to update your rewrite rules via the settings page, and run the WebP upgrade script. Every image in the Media Library with a WebP version using the old naming scheme will have a link to the upgrade process (in list view, not grid view).
+
+= 2.1.0 =
+* security: ssl strengthened for cloud users, no more SSLv3 (thanks POODLE), and other additional encryption tweaks, please report related errors ASAP
+* fixed: warning when scheduled scanner doesn't have any images to optimize
+* added: option to skip PNG images over a certain size since PNG images are prone to timeouts (should not be too much of a problem for cloud users, but just in case...)
+* added: compatibility with Animated Gif Resize plugin to preserve animation even in resizes
+* added: compatibility with Hammy plugin to generate dynamic resize versions on demand (and any other plugin/theme that uses WPThumb)
+* added: optimizing previously uploaded images (via bulk or otherwise) also uploads to Amazon S3 with the Amazon Cloudfront and S3 plugin
+* added: webp images are tracked in attachment metadata to enable upload via AWS plugins, but webp images are not deleted when attachments are deleted from Media Library (yet)
+* added: previously generated retina images (WP Retina 2x) are processed by standard Media Library routine, instead of via Folders to Optimize
+* changed: streamlined wp_image_editor extensions to be more future-proof
+* updated: all translations have been updated
 
 = 2.0.2 =
 * security: pngout error message properly sanitized to prevent XSS attack
