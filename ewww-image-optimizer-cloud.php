@@ -6,7 +6,7 @@
  */
 /*
 Plugin Name: EWWW Image Optimizer Cloud
-Plugin URI: http://www.exactlywww.com/cloud/
+Plugin URI: http://ewww.io/
 Description: Reduce file sizes for images within WordPress including NextGEN Gallery and GRAND FlAGallery via paid cloud service.
 Author: Shane Bishop
 Text Domain: ewww-image-optimizer-cloud

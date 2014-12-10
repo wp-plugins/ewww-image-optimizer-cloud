@@ -2,7 +2,7 @@
 Contributors: nosilver4u
 Tags: images, image, attachments, attachment, optimize, optimization, lossless, photos, photo, picture, pictures, seo, compression, image editor, gmagick, cloud
 Requires at least: 3.5
-Tested up to: 4.0
+Tested up to: 4.1
 Stable tag: 2.1.0
 License: GPLv3
 
@@ -66,7 +66,7 @@ Uploads are automatically optimized. Look for Optimize under the Image Store (Ga
 
 1. Upload the 'ewww-image-optimizer-cloud' plugin to your '/wp-content/plugins/' directory.
 1. Activate the plugin through the 'Plugins' menu in WordPress.
-1. Purchase an API key via http://www.exactlywww.com/cloud/.
+1. Purchase an API key via http://ewww.io/plans/.
 1. Enter your API key on the plugin settings page and enable the image formats you want to optimize.
 1. *Optional* Visit the settings page to enable/disable specific tools and turn on advanced optimization features.
 1. Done!
@@ -106,6 +106,21 @@ JPEGmini and Pngquant were recommended by EWWW IO users. JPEGmini is the best lo
 
 = IMPORTANT =
 NOTE: The WebP naming scheme has been changed to avoid conflicts when JPGs and PNGs have identical filenames. You will need to update your rewrite rules via the settings page, and run the WebP upgrade script. Every image in the Media Library with a WebP version using the old naming scheme will have a link to the upgrade process (in list view, not grid view).
+
+= 2.1.1 =
+* broken: optimize on upload currently broken for flagallery
+* deprecated: NextGEN legacy support will be removed in 2.2 unless I hear from anyone still using it, Nextcellent will continue to be supported
+* changed: all image types are enabled when cloud API key is validated (but only if you do not choose individual options)
+* changed: prefixed javascript/request variables to avoid potential conflicts
+* fixed: undefined variable $log when uploading images
+* fixed: undefined variable $force when running scheduled optimize
+* fixed: undefined index JPG Support when GD is missing
+* added: memory logging in memory.log when WP_DEBUG is turned on in wp-config.php
+* fixed: bulk actions for Nextcellent were missing
+* fixed: notices generated because webp versions do not have height and width when WP is scanning resizes
+* fixed: notices generated due to no optimization status during bulk optimization for webp versions
+* fixed: error when trying to unserialize an array for Image Store Optimize page
+* added: Portuguese translation (pt_BR), props to Pedro Marcelo de Sá Alves
 
 = 2.1.0 =
 * security: ssl strengthened for cloud users, no more SSLv3 (thanks POODLE), and other additional encryption tweaks, please report related errors ASAP
