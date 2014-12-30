@@ -1,6 +1,6 @@
 === EWWW Image Optimizer Cloud ===
 Contributors: nosilver4u
-Tags: images, image, attachments, attachment, optimize, optimization, lossless, photos, photo, picture, pictures, seo, compression, image editor, gmagick, cloud
+Tags: images, image, attachments, attachment, optimize, optimization, lossless, photos, photo, picture, pictures, seo, compression, image editor, gmagick, cloud, wp-cli
 Requires at least: 3.5
 Tested up to: 4.1
 Stable tag: 2.1.2
@@ -25,7 +25,7 @@ EWWW Image Optimizer Cloud offloads all optimization to designated servers which
 1. **Less bandwidth usage.** Optimizing your images can save you hundreds of KB per image, which means significantly less bandwidth usage.
 1. **Better Privacy.** The cloud servers do not store any images after optimization is complete, and you retain all rights to any images processed via the cloud service.
 1. **Root access not needed** No binaries needed on your local server, so it works on any hosting platform.
-1. **Optimize everything** Using the Bulk Optimize tool, and the wp_image_editor class extension, any image in Wordpress can be optimized.
+1. **Optimize everything** With the wp_image_editor class extension, and the ability to specify your own folders for scanning, any image in Wordpress can be optimized.
 
 If you want to optimize images on your own server without using the cloud, see the [EWWW Image Optimizer](http://wordpress.org/plugins/ewww-image-optimizer/).
 
@@ -39,11 +39,11 @@ All optimized images are stored in the database so that the plugin does not atte
 
 = WP Image Editor = 
 
-All images created by the built-in WP_Image_Editor class will be automatically optimized. Current implementations are GD, Imagick, and Gmagick. Images optimized via this class include Meta Slider, BuddyPress Activity Plus (thumbs), WP Retina 2x, Imsanity, Simple Image Sizes, Hammy, Animated GIF Resize and probably countless others. If you have a plugin that uses WP_Image_Editor (or are not sure) and would like EWWW IO to be able to optimize previous uploads, post a thread in the support forums.
+All images created by the built-in WP_Image_Editor class will be automatically optimized. Current implementations are GD, Imagick, and Gmagick. Images optimized via this class include Meta Slider, BuddyPress Activity Plus (thumbs), WP Retina 2x, Imsanity, Simple Image Sizes, Hammy, Animated GIF Resize and probably countless others. If you are not sure if a plugin uses WP_Image_Editor, post a thread in the support forums.
 
 = Optimize Everything Else =
 
-Site admins can specify any folder within their wordpress folder to be optimized. The 'Scan and Optimize' option under Media->Bulk Optimize will optimize theme images, BuddyPress avatars, BuddyPress Activity Plus images, Meta Slider slides, WP Symposium images, GD bbPress attachments, Grand Media Galleries, and any user-specified folders. Additionally, this tool can run on an hourly basis via wp_cron to keep newly uploaded images optimized. Scheduled optimization should not be used for any plugin that uses the built-in Wordpress image functions and it does NOT include Media Library images, because they are already optimized on upload.
+Site admins can specify any folder within their wordpress folder to be optimized. The 'Scan and Optimize' option under Media->Bulk Optimize will optimize theme images, BuddyPress avatars, BuddyPress Activity Plus images, Meta Slider slides, WP Symposium images, GD bbPress attachments, Grand Media Galleries, and any user-specified folders. Additionally, this tool can run on an hourly basis via wp_cron to keep newly uploaded images optimized. Scheduled optimization should not be used for any plugin that uses the built-in Wordpress image functions, unless you have disabled automatic optimization.
 
 = WP-CLI =
 
@@ -82,6 +82,10 @@ Using EWWW IO:
 
 == Frequently Asked Questions ==
 
+= Google Pagespeed says my images need compressing or resizing, but I already optimized all my images. What do I do?
+
+http://ewww.io/2014/12/05/pagespeed-says-my-images-need-more-work/
+
 = Does the plugin replace existing images? =
 
 Yes, but only if the optimized version is smaller. The plugin should NEVER create a larger image.
@@ -96,7 +100,7 @@ The lossy JPG optimization using JPEGmini will determine the ideal quality setti
 
 = The bulk optimizer doesn't seem to be working, what can I do? =
 
-Each image is given 50 seconds to complete (which actually doesn't include time used by the optimization utilities). If that doesn't seem to do the trick, you can also increase the setting max_execution_time in your php.ini file. That said, there are other timeouts with Apache, and possibly other limitations of your webhost. If you've tried everything else, the last thing to look for is large PNG files. In my tests on a shared hosting setup, "large" is anything over 300 KB. If that doesn't work, perhaps you ought to convert that PNG to JPG or set a max PNG optimization size. Screenshots are often done as PNG files, but that is a poor choice for anything with photographic elements.
+If it doesn't seem to work at all, check for javascript problems using the developer console in Firefox or Chrome. If it is not working just on some images, you may need to increase the setting max_execution_time in your php.ini file. There are also other timeouts with Apache, and possibly other limitations of your webhost. If you've tried everything else, the last thing to look for is large PNG files. In my tests on a shared hosting setup, "large" is anything over 300 KB. You can first try decreasing the PNG optimization level in the settings. If that doesn't work, perhaps you ought to convert that PNG to JPG or set a max PNG optimization size. Screenshots are often done as PNG files, but that is a poor choice for anything with photographic elements.
 
 = I want to know more about image optimization. =
 
@@ -104,7 +108,7 @@ That's not really a question, but since I made it up, I'll answer it. See these 
 http://developer.yahoo.com/performance/rules.html#opt_images
 https://developers.google.com/speed/docs/best-practices/payload#CompressImages
 https://developers.google.com/speed/docs/insights/OptimizeImages
-JPEGmini and Pngquant were recommended by EWWW IO users. JPEGmini is the best lossy compression tool that I have found for JPG images. Pngquant is an excellent lossy optimizer for PNGs, and is used by TinyPNG.com.
+JPEGmini and Pngquant were recommended by EWWW IO users. JPEGmini is the best lossy compression tool that I have found for JPG images. Pngquant is an excellent lossy optimizer for PNGs, and is one of the tools used by TinyPNG.com.
 
 == Changelog ==
 
