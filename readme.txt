@@ -3,7 +3,7 @@ Contributors: nosilver4u
 Tags: images, image, attachments, attachment, optimize, optimization, lossless, photos, photo, picture, pictures, seo, compression, image editor, gmagick, cloud, wp-cli
 Requires at least: 3.5
 Tested up to: 4.1
-Stable tag: 2.1.2
+Stable tag: 2.2.0
 License: GPLv3
 
 Reduce file sizes for images within WordPress including NextGEN, GRAND FlAGallery and more via paid cloud service.
@@ -115,7 +115,7 @@ JPEGmini and Pngquant were recommended by EWWW IO users. JPEGmini is the best lo
 = IMPORTANT =
 NOTE: The WebP naming scheme has been changed to avoid conflicts when JPGs and PNGs have identical filenames. You will need to update your rewrite rules via the settings page, and run the WebP upgrade script. Every image in the Media Library with a WebP version using the old naming scheme will have a link to the upgrade process (in list view, not grid view).
 
-= 2.1.3 =
+= 2.2.0 =
 * added: wp-cli command to optimize via command-line, 'wp-cli help ewwwio optimize' for more details
 * added: Unoptimized Images page to show ONLY images that have not been processed by EWWW (under Media Library)
 * added: advanced option to preserve metadata for full-size originals

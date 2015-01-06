@@ -220,7 +220,7 @@ jQuery(document).ready(function($) {
 			ewww_wpnonce: ewww_vars._wpnonce,
 			ewww_offset: ewww_pointer,
 	        };
-		$('.displaying-num').text(ewww_vars.image_count + ' total images');
+		$('.displaying-num').text(ewww_vars.count_string);
 		$.post(ajaxurl, ewww_table_data, function(response) {
 			$('#ewww-bulk-table').html(response);
 		});
@@ -508,8 +508,10 @@ function ewwwRemoveImage(imageID) {
 	jQuery.post(ajaxurl, ewww_image_removal, function(response) {
 		if(response == '1') {
 			jQuery('#ewww-image-' + imageID).remove();
+			var ewww_prev_count = ewww_vars.image_count;
 			ewww_vars.image_count--;
-			jQuery('.displaying-num').text(ewww_vars.image_count + ' total images');
+			ewww_vars.count_string = ewww_vars.count_string.replace( ewww_prev_count, ewww_vars.image_count );
+			jQuery('.displaying-num').text(ewww_vars.count_string);
 		} else {
 			alert("could not remove image from table.");
 		}
