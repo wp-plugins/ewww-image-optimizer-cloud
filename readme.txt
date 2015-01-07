@@ -113,7 +113,10 @@ JPEGmini and Pngquant were recommended by EWWW IO users. JPEGmini is the best lo
 == Changelog ==
 
 = IMPORTANT =
-NOTE: The WebP naming scheme has been changed to avoid conflicts when JPGs and PNGs have identical filenames. You will need to update your rewrite rules via the settings page, and run the WebP upgrade script. Every image in the Media Library with a WebP version using the old naming scheme will have a link to the upgrade process (in list view, not grid view).
+NOTE: The WebP naming scheme changed in 2.0.1 avoid filename conflicts. You will need to update your rewrite rules via the settings page, and run the WebP upgrade script. Every image in the Media Library with a WebP version using the old naming scheme will have a link to the upgrade process (in list view, not grid view).
+
+= 2.2.1 =
+* fixed: infinite loop on hosts where set_time_limit does not work
 
 = 2.2.0 =
 * added: wp-cli command to optimize via command-line, 'wp-cli help ewwwio optimize' for more details
