@@ -1,16 +1,16 @@
 <?php
 /**
  * Integrate cloud image optimization into WordPress.
- * @version 2.0.0
+ * @version 2.2.2
  * @package EWWW_Image_Optimizer_Cloud
  */
 /*
 Plugin Name: EWWW Image Optimizer Cloud
-Plugin URI: http://www.exactlywww.com/cloud/
+Plugin URI: http://ewww.io/
 Description: Reduce file sizes for images within WordPress including NextGEN Gallery and GRAND FlAGallery via paid cloud service.
 Author: Shane Bishop
 Text Domain: ewww-image-optimizer-cloud
-Version: 2.0.0
+Version: 2.2.2
 Author URI: http://www.shanebishop.net/
 License: GPLv3
 */
@@ -35,6 +35,7 @@ function ewww_image_optimizer_cloud_init() {
 		define('EWWW_IMAGE_OPTIMIZER_CLOUD', TRUE);
 		define('EWWW_IMAGE_OPTIMIZER_NOEXEC', TRUE);
 	}
+	ewwwio_memory( __FUNCTION__ );
 }
 
 // stub function from core
@@ -83,12 +84,15 @@ function ewww_image_optimizer_mimetype($path, $case) {
 	}
 	// if we are dealing with a binary, and found an executable
 	if ($case == 'b' && preg_match('/executable/', $type)) {
+		ewwwio_memory( __FUNCTION__ );
 		return $type;
 	// otherwise, if we are dealing with an image
 	} elseif ($case == 'i') {
+		ewwwio_memory( __FUNCTION__ );
 		return $type;
 	// if all else fails, bail
 	} else {
+		ewwwio_memory( __FUNCTION__ );
 		return false;
 	}
 }
@@ -101,9 +105,11 @@ function ewww_image_optimizer_mimetype($path, $case) {
  * @param   string $file		Full absolute path to the image file
  * @param   int $gallery_type		1=wordpress, 2=nextgen, 3=flagallery, 4=aux_images, 5=image editor, 6=imagestore, 7=retina
  * @param   boolean $converted		tells us if this is a resize and the full image was converted to a new format
+ * @param   boolean $new		tells the optimizer that this is a new image, so it should attempt conversion regardlress of previous results
+ * @param   boolean $fullsize		indicates that this is a full size image, not a resized version
  * @returns array
  */
-function ewww_image_optimizer($file, $gallery_type, $converted, $new, $fullsize = false) {
+function ewww_image_optimizer($file, $gallery_type = 4, $converted = false, $new = false, $fullsize = false) {
 	global $ewww_debug;
 	$ewww_debug .= "<b>ewww_image_optimizer()</b><br>";
 	// if the plugin gets here without initializing, we need to run through some things first
@@ -157,6 +163,11 @@ function ewww_image_optimizer($file, $gallery_type, $converted, $new, $fullsize 
 		$ewww_debug .= "couldn't find any functions for mimetype detection<br>";
 		return array(false, $msg, $converted, $original);
 	}
+	if ( ewww_image_optimizer_get_option( 'ewww_image_optimizer_lossy_skip_full' ) && $fullsize ) {
+		$skip_lossy = true;
+	} else {
+		$skip_lossy = false;
+	}
 	// if the full-size image was converted
 	if ($converted) {
 		$ewww_debug .= "full-size image was converted, need to rebuild filename for meta<br>";
@@ -181,6 +192,20 @@ function ewww_image_optimizer($file, $gallery_type, $converted, $new, $fullsize 
 	// get the original image size
 	$orig_size = filesize($file);
 	$ewww_debug .= "original filesize: $orig_size<br>";
+	if ( $orig_size < ewww_image_optimizer_get_option( 'ewww_image_optimizer_skip_size' ) ) {
+		// tell the user optimization was skipped
+		$msg = __( "Optimization skipped", EWWW_IMAGE_OPTIMIZER_DOMAIN );
+		$ewww_debug .= "optimization bypassed due to filesize: $file <br>";
+		// send back the above message
+		return array(false, $msg, $converted, $file);
+	}
+	if ( $type == 'image/png' && ewww_image_optimizer_get_option( 'ewww_image_optimizer_skip_png_size' ) && $orig_size > ewww_image_optimizer_get_option( 'ewww_image_optimizer_skip_png_size' ) ) {
+		// tell the user optimization was skipped
+		$msg = __( "Optimization skipped", EWWW_IMAGE_OPTIMIZER_DOMAIN );
+		$ewww_debug .= "optimization bypassed due to filesize: $file <br>";
+		// send back the above message
+		return array(false, $msg, $converted, $file);
+	}
 	// initialize $new_size with the original size
 //	$new_size = $orig_size;
 	$new_size = 0;
@@ -192,7 +217,7 @@ function ewww_image_optimizer($file, $gallery_type, $converted, $new, $fullsize 
 	switch($type) {
 		case 'image/jpeg':
 			// if jpg2png conversion is enabled, and this image is in the wordpress media library
-			if ((ewww_image_optimizer_get_option('ewww_image_optimizer_jpg_to_png') && $gallery_type == 1) || !empty($_GET['convert'])) {
+			if ((ewww_image_optimizer_get_option('ewww_image_optimizer_jpg_to_png') && $gallery_type == 1) || !empty($_GET['ewww_convert'])) {
 				// generate the filename for a PNG
 				// if this is a resize version
 				if ($converted) {
@@ -209,13 +234,13 @@ function ewww_image_optimizer($file, $gallery_type, $converted, $new, $fullsize 
 				$pngfile = '';
 			}
 			// check for previous optimization, so long as the force flag is on and this isn't a new image that needs converting
-			if ( empty( $_REQUEST['force'] ) && ! ( $new && $convert ) ) {
+			if ( empty( $_REQUEST['ewww_force'] ) && ! ( $new && $convert ) ) {
 				if ( $results_msg = ewww_image_optimizer_check_table( $file, $orig_size ) ) {
 					return array( $file, $results_msg, $converted, $original );
 				}
 			}
 			if (ewww_image_optimizer_get_option('ewww_image_optimizer_cloud_jpg')) {
-				list($file, $converted, $result, $new_size) = ewww_image_optimizer_cloud_optimizer($file, $type, $convert, $pngfile, 'image/png', $fullsize);
+				list($file, $converted, $result, $new_size) = ewww_image_optimizer_cloud_optimizer($file, $type, $convert, $pngfile, 'image/png', $skip_lossy);
 				if ($converted) {
 					$converted = $filenum;
 					ewww_image_optimizer_webp_create( $file, $new_size, 'image/png', null );
@@ -228,7 +253,7 @@ function ewww_image_optimizer($file, $gallery_type, $converted, $new, $fullsize 
 			break;
 		case 'image/png':
 			// png2jpg conversion is turned on, and the image is in the wordpress media library
-			if ( ( ewww_image_optimizer_get_option( 'ewww_image_optimizer_png_to_jpg' ) || ! empty( $_GET['convert'] ) ) && $gallery_type == 1 && ! $fullsize && ( ! ewww_image_optimizer_png_alpha( $file ) || ewww_image_optimizer_jpg_background() ) ) {
+			if ( ( ewww_image_optimizer_get_option( 'ewww_image_optimizer_png_to_jpg' ) || ! empty( $_GET['ewww_convert'] ) ) && $gallery_type == 1 && ! $skip_lossy && ( ! ewww_image_optimizer_png_alpha( $file ) || ewww_image_optimizer_jpg_background() ) ) {
 				$ewww_debug .= "PNG to JPG conversion turned on<br>";
 				// if the user set a fill background for transparency
 				$background = '';
@@ -274,13 +299,13 @@ function ewww_image_optimizer($file, $gallery_type, $converted, $new, $fullsize 
 				$gquality = null;
 			}
 			// check for previous optimization, so long as the force flag is on and this isn't a new image that needs converting
-			if ( empty( $_REQUEST['force'] ) && ! ( $new && $convert ) ) {
+			if ( empty( $_REQUEST['ewww_force'] ) && ! ( $new && $convert ) ) {
 				if ( $results_msg = ewww_image_optimizer_check_table( $file, $orig_size ) ) {
 					return array( $file, $results_msg, $converted, $original );
 				}
 			}
 			if (ewww_image_optimizer_get_option('ewww_image_optimizer_cloud_png')) {
-				list($file, $converted, $result, $new_size) = ewww_image_optimizer_cloud_optimizer($file, $type, $convert, $jpgfile, 'image/jpeg', $fullsize, array('r' => $r, 'g' => $g, 'b' => $b, 'quality' => $gquality));
+				list($file, $converted, $result, $new_size) = ewww_image_optimizer_cloud_optimizer($file, $type, $convert, $jpgfile, 'image/jpeg', $skip_lossy, array('r' => $r, 'g' => $g, 'b' => $b, 'quality' => $gquality));
 				if ($converted) {
 					$converted = $filenum;
 					ewww_image_optimizer_webp_create( $file, $new_size, 'image/jpeg', null ); 
@@ -293,7 +318,7 @@ function ewww_image_optimizer($file, $gallery_type, $converted, $new, $fullsize 
 			break;
 		case 'image/gif':
 			// if gif2png is turned on, and the image is in the wordpress media library
-			if (((ewww_image_optimizer_get_option('ewww_image_optimizer_gif_to_png') && $gallery_type == 1) || !empty($_GET['convert'])) && !ewww_image_optimizer_is_animated($file)) {
+			if (((ewww_image_optimizer_get_option('ewww_image_optimizer_gif_to_png') && $gallery_type == 1) || !empty($_GET['ewww_convert'])) && !ewww_image_optimizer_is_animated($file)) {
 				// generate the filename for a PNG
 				// if this is a resize version
 				if ($converted) {
@@ -310,13 +335,13 @@ function ewww_image_optimizer($file, $gallery_type, $converted, $new, $fullsize 
 				$pngfile = '';
 			}
 			// check for previous optimization, so long as the force flag is on and this isn't a new image that needs converting
-			if ( empty( $_REQUEST['force'] ) && ! ( $new && $convert ) ) {
+			if ( empty( $_REQUEST['ewww_force'] ) && ! ( $new && $convert ) ) {
 				if ( $results_msg = ewww_image_optimizer_check_table( $file, $orig_size ) ) {
 					return array( $file, $results_msg, $converted, $original );
 				}
 			}
 			if (ewww_image_optimizer_get_option('ewww_image_optimizer_cloud_gif')) {
-				list($file, $converted, $result, $new_size) = ewww_image_optimizer_cloud_optimizer($file, $type, $convert, $pngfile, 'image/png', $fullsize);
+				list($file, $converted, $result, $new_size) = ewww_image_optimizer_cloud_optimizer($file, $type, $convert, $pngfile, 'image/png', $skip_lossy);
 				if ($converted) {
 					$converted = $filenum;
 					ewww_image_optimizer_webp_create( $file, $new_size, 'image/png', null ); 
@@ -333,8 +358,10 @@ function ewww_image_optimizer($file, $gallery_type, $converted, $new, $fullsize 
 	}
 	if (!empty($new_size)) {
 		$results_msg = ewww_image_optimizer_update_table ($file, $new_size, $orig_size, $new);
+		ewwwio_memory( __FUNCTION__ );
 		return array($file, $results_msg, $converted, $original);
 	}
+	ewwwio_memory( __FUNCTION__ );
 	// otherwise, send back the filename, the results (some sort of error message), the $converted flag, and the name of the original image
 	return array($file, $result, $converted, $original);
 }
@@ -353,4 +380,5 @@ function ewww_image_optimizer_webp_create( $file, $orig_size, $type, $tool ) {
 		$ewww_debug .= 'webp file was too big, deleting<br>';
 		unlink( $webpfile );
 	}
+	ewwwio_memory( __FUNCTION__ );
 }
