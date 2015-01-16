@@ -139,7 +139,7 @@ function ewww_image_optimizer($file, $gallery_type = 4, $converted = false, $new
 	if ( FALSE === is_writable($file) ) {
 		// tell the user we can't write to the file
 		$msg = sprintf(__("<span class='code'>%s</span> is not writable", EWWW_IMAGE_OPTIMIZER_DOMAIN), $file);
-		$ewww_debug .= "couldn't write to the file<br>";
+		$ewww_debug .= "couldn't write to the file $file<br>";
 		// send back the above message
 		return array(false, $msg, $converted, $original);
 	}

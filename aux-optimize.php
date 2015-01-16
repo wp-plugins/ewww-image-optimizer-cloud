@@ -596,8 +596,17 @@ function ewww_image_optimizer_aux_images_script($hook) {
 							if (preg_match('/resized-/', $backup_size)) {
 								$path = $meta['path'];
 								$image_size = filesize($path);
-								$query = $wpdb->prepare("SELECT id FROM $wpdb->ewwwio_images WHERE BINARY path LIKE %s AND image_size LIKE '$image_size'", $path);
-								$already_optimized = $wpdb->get_results($query);
+								$query = $wpdb->prepare("SELECT id FROM $wpdb->ewwwio_images WHERE path LIKE %s AND image_size LIKE '$image_size'", $path);
+								$optimized_query = $wpdb->get_results($query);
+								if (!empty($optimized_query)) {
+									foreach ( $optimized_query as $image ) {
+										if ( $image['path'] != $path ) {
+											$ewww_debug .= "{$image['path']} does not match $path, continuing our search<br>";
+										} else {
+											$already_optimized = $image;
+										}
+									}
+								}
 								$mimetype = ewww_image_optimizer_mimetype($path, 'i');
 								if (preg_match('/^image\/(jpeg|png|gif)/', $mimetype) && empty($already_optimized)) {
 									$slide_paths[] = $path;
@@ -614,6 +623,24 @@ function ewww_image_optimizer_aux_images_script($hook) {
 			foreach ($aux_paths as $aux_path) {
 				$attachments = array_merge($attachments, ewww_image_optimizer_image_scan($aux_path));
 			}
+		}
+		// scan images in two most recent media library folders if the option is enabled, and this is a scheduled optimization
+		if ( 'ewww-image-optimizer-auto' == $hook && ewww_image_optimizer_get_option( 'ewww_image_optimizer_include_media_paths' ) ) {
+			// retrieve the location of the wordpress upload folder
+			$upload_dir = wp_upload_dir();
+			// retrieve the path of the upload folder
+			$upload_path = $upload_dir['basedir'];
+			$this_month = date('m');
+			$this_year = date('Y');
+			$attachments = array_merge($attachments, ewww_image_optimizer_image_scan("$upload_path/$this_year/$this_month/"));
+			if ( class_exists('DateTime') ) {
+				$date = new DateTime();
+				$date->sub(new DateInterval('P1M'));
+				$last_year = $date->format('Y');
+				$last_month = $date->format('m');
+				$attachments = array_merge($attachments, ewww_image_optimizer_image_scan("$upload_path/$last_year/$last_month/"));
+			}
+
 		}
 		// store the filenames we retrieved in the 'bulk_attachments' option so we can keep track of our progress in the database
 		update_option('ewww_image_optimizer_aux_attachments', $attachments);

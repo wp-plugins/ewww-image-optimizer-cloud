@@ -4,7 +4,7 @@
 // TODO: webp fallback mode for CDN users: http://css-tricks.com/webp-with-fallback/
 // TODO: this could be useful: http://codex.wordpress.org/Function_Reference/maybe_unserialize
 
-define('EWWW_IMAGE_OPTIMIZER_VERSION', '222');
+define('EWWW_IMAGE_OPTIMIZER_VERSION', '222.11');
 
 // initialize debug global
 $disabled = ini_get('disable_functions');
@@ -234,6 +234,8 @@ function ewww_image_optimizer_admin_init() {
 			update_site_option('ewww_image_optimizer_skip_png_size', intval($_POST['ewww_image_optimizer_skip_png_size']));
 			if (empty($_POST['ewww_image_optimizer_noauto'])) $_POST['ewww_image_optimizer_noauto'] = '';
 			update_site_option('ewww_image_optimizer_noauto', $_POST['ewww_image_optimizer_noauto']);
+			if (empty($_POST['ewww_image_optimizer_include_media_paths'])) $_POST['ewww_image_optimizer_include_media_paths'] = '';
+			update_site_option('ewww_image_optimizer_include_media_paths', $_POST['ewww_image_optimizer_include_media_paths']);
 			add_action('network_admin_notices', 'ewww_image_optimizer_network_settings_saved');
 		}
 	}
@@ -270,6 +272,7 @@ function ewww_image_optimizer_admin_init() {
 	register_setting('ewww_image_optimizer_options', 'ewww_image_optimizer_skip_png_size', 'intval');
 	register_setting('ewww_image_optimizer_options', 'ewww_image_optimizer_import_status');
 	register_setting('ewww_image_optimizer_options', 'ewww_image_optimizer_noauto');
+	register_setting('ewww_image_optimizer_options', 'ewww_image_optimizer_include_media_paths');
 	ewww_image_optimizer_exec_init();
 	// setup scheduled optimization if the user has enabled it, and it isn't already scheduled
 	if (ewww_image_optimizer_get_option('ewww_image_optimizer_auto') == TRUE && !wp_next_scheduled('ewww_image_optimizer_auto')) {
@@ -375,7 +378,8 @@ function ewww_image_optimizer_install_table() {
 		gallery VARCHAR(30),
 		image_size int UNSIGNED,
 		orig_size int UNSIGNED,
-		UNIQUE KEY id (id)
+		UNIQUE KEY id (id),
+		INDEX path_image_size (path(255), image_size),
 	);";
 
 	// include the upgrade library to initialize a table
@@ -533,8 +537,17 @@ function ewww_image_optimizer_retina ( $id, $retina_path ) {
 	$ewww_debug .= "retina path: $retina_path<br>";
 	$opt_size = filesize($retina_path);
 	$ewww_debug .= "retina size: $opt_size<br>";
-	$query = $wpdb->prepare("SELECT id FROM $wpdb->ewwwio_images WHERE BINARY path = %s AND image_size = '$opt_size'", $temp_path);
-	$already_optimized = $wpdb->get_var($query);
+	$query = $wpdb->prepare("SELECT id,path FROM $wpdb->ewwwio_images WHERE path = %s AND image_size = '$opt_size'", $temp_path);
+	$optimized_query = $wpdb->get_results($query);
+	if (!empty($optimized_query)) {
+		foreach ( $optimized_query as $image ) {
+			if ( $image['path'] != $temp_path ) {
+				$ewww_debug .= "{$image['path']} does not match $temp_path, continuing our search<br>";
+			} else {
+				$already_optimized = $image;
+			}
+		}
+	}
 	if (!empty($already_optimized)) {
 		// store info on the current image for future reference
 		$wpdb->update( $wpdb->ewwwio_images,
@@ -542,7 +555,7 @@ function ewww_image_optimizer_retina ( $id, $retina_path ) {
 				'path' => $retina_path,
 			),
 			array(
-				'id' => $already_optimized,
+				'id' => $already_optimized['id'],
 			));
 	} else {
 		ewww_image_optimizer($retina_path, 7, false, false);
@@ -698,12 +711,16 @@ function ewww_image_optimizer_aux_paths_sanitize ($input) {
 		// retrieve the location of the wordpress upload folder
 		$upload_dir = wp_upload_dir();
 		// retrieve the path of the upload folder
-		$upload_path = str_replace($upload_dir['basedir'], '', $path);
-		$upload_path_t = str_replace(trailingslashit($upload_dir['basedir']), '', $path);
+		$upload_path = trailingslashit($upload_dir['basedir']);
+//		$upload_path = str_replace($upload_dir['basedir'], '', $path);
+//		$ewww_debug .= "$upload_path<br>";	
+//		$upload_path_t = str_replace(trailingslashit($upload_dir['basedir']), '', $path);
+//		$ewww_debug .= "$upload_path_t<br>";	
 		if (is_dir($path) && (strpos($path, trailingslashit(ABSPATH)) === 0 || strpos($path, $upload_path) === 0)) {
 			$path_array[] = $path;
 		}
 	}
+	ewww_image_optimizer_debug_log();
 	ewwwio_memory( __FUNCTION__ );
 	return $path_array;
 }
@@ -1179,15 +1196,15 @@ function ewww_image_optimizer_cloud_optimizer($file, $type, $convert = false, $n
 	$payload .= '--' . $boundary . '--';
 
 	// retrieve the time when the optimizer starts
-	$started = microtime(true);
+//	$started = microtime(true);
 	$response = wp_remote_post($url, array(
 		'timeout' => 90,
 		'headers' => $headers,
 		'sslverify' => false,
 		'body' => $payload,
 		));
-	$elapsed = microtime(true) - $started;
-	$ewww_debug .= "processing image via cloud took $elapsed seconds<br>";
+//	$elapsed = microtime(true) - $started;
+//	$ewww_debug .= "processing image via cloud took $elapsed seconds<br>";
 	if (is_wp_error($response)) {
 		$error_message = $response->get_error_message();
 		$ewww_debug .= "optimize failed: $error_message <br>";
@@ -1226,13 +1243,16 @@ function ewww_image_optimizer_cloud_optimizer($file, $type, $convert = false, $n
 }
 
 // check the database to see if we've done this image before
-function ewww_image_optimizer_check_table ($file, $orig_size) {
+/*function ewww_image_optimizer_check_table ($file, $orig_size) {
 	global $wpdb;
 	global $ewww_debug;
 	$already_optimized = false;
 	$ewww_debug .= "<b>ewww_image_optimizer_check_table()</b><br>";
+	$started = microtime(true);
 	$query = $wpdb->prepare("SELECT results FROM $wpdb->ewwwio_images WHERE BINARY path = %s AND image_size = '$orig_size'", $file);
 	$already_optimized = $wpdb->get_var($query);
+	$elapsed = microtime(true) - $started;
+	$ewww_debug .= "elapsed during query: $elapsed<br>";
 	if ( preg_match( '/' . __('License exceeded', EWWW_IMAGE_OPTIMIZER_DOMAIN) . '/', $already_optimized ) ) {
 		return;
 	}
@@ -1244,6 +1264,33 @@ function ewww_image_optimizer_check_table ($file, $orig_size) {
 	ewwwio_memory( __FUNCTION__ );
 		return $already_optimized;
 	}
+}*/
+
+// check the database to see if we've done this image before
+function ewww_image_optimizer_check_table ($file, $orig_size) {
+	global $wpdb;
+	global $ewww_debug;
+	$already_optimized = false;
+	$ewww_debug .= "<b>ewww_image_optimizer_check_table()</b><br>";
+	$query = $wpdb->prepare("SELECT path,results FROM $wpdb->ewwwio_images WHERE path = %s AND image_size = '$orig_size'", $file);
+	$already_optimized = $wpdb->get_results($query, ARRAY_A);
+	if (!empty($already_optimized) && empty($_REQUEST['ewww_force'])) {
+		$prev_string = " - " . __('Previously Optimized', EWWW_IMAGE_OPTIMIZER_DOMAIN);
+		foreach ( $already_optimized as $image ) {
+			if ( $image['path'] != $file ) {
+				$ewww_debug .= "{$image['path']} does not match $file, continuing our search<br>";
+			} else {
+				if ( preg_match( '/' . __('License exceeded', EWWW_IMAGE_OPTIMIZER_DOMAIN) . '/', $image['results'] ) ) {
+					return;
+				}
+				$already_optimized = preg_replace("/$prev_string/", '', $image['results']);
+				$already_optimized = $already_optimized . $prev_string;
+				$ewww_debug .= "already optimized: {$image['path']} - $already_optimized<br>";
+				ewwwio_memory( __FUNCTION__ );
+				return $already_optimized;
+			}
+		}
+	}
 }
 
 // receives a path, results, optimized size, and an original size to insert into ewwwwio_images table
@@ -1252,8 +1299,17 @@ function ewww_image_optimizer_update_table ($attachment, $opt_size, $orig_size, 
 	global $wpdb;
 	global $ewww_debug;
 	$ewww_debug .= "<b>ewww_image_optimizer_update_table()</b><br>";
-	$query = $wpdb->prepare("SELECT id,orig_size,results FROM $wpdb->ewwwio_images WHERE BINARY path = %s", $attachment);
-	$already_optimized = $wpdb->get_row($query, ARRAY_A);
+	$query = $wpdb->prepare("SELECT id,orig_size,results,path FROM $wpdb->ewwwio_images WHERE path = %s", $attachment);
+	$optimized_query = $wpdb->get_results($query, ARRAY_A);
+	if (!empty($optimized_query)) {
+		foreach ( $optimized_query as $image ) {
+			if ( $image['path'] != $attachment ) {
+				$ewww_debug .= "{$image['path']} does not match $attachment, continuing our search<br>";
+			} else {
+				$already_optimized = $image;
+			}
+		}
+	}
 	$ewww_debug .= "savings: $opt_size (new) vs. $orig_size (orig)<br>";
 	if (!empty($already_optimized['results']) && $preserve_results && $opt_size === $orig_size) {
 		$results_msg = $already_optimized['results'];
@@ -1440,8 +1496,18 @@ function ewww_image_optimizer_resize_from_meta_data($meta, $ID = null, $log = tr
 		$imsanity_path = trailingslashit($path_parts['dirname']) . $path_parts['filename'] . '-' . $newW . 'x' . $newH . '.' . $path_parts['extension'];
 		$ewww_debug .= "imsanity path: $imsanity_path<br>";
 		$image_size = filesize($file_path);
-		$query = $wpdb->prepare("SELECT id FROM $wpdb->ewwwio_images WHERE BINARY path = %s AND image_size = '$image_size'", $imsanity_path);
-		if ( $already_optimized = $wpdb->get_results($query, ARRAY_A) ) {
+		$query = $wpdb->prepare("SELECT id,path FROM $wpdb->ewwwio_images WHERE path = %s AND image_size = '$image_size'", $imsanity_path);
+		$optimized_query = $wpdb->get_results($query, ARRAY_A);
+		if (!empty($optimized_query)) {
+			foreach ( $optimized_query as $image ) {
+				if ( $image['path'] != $imsanity_path ) {
+					$ewww_debug .= "{$image['path']} does not match $imsanity_path, continuing our search<br>";
+				} else {
+					$already_optimized = $image;
+				}
+			}
+		}
+		if ( ! empty ( $already_optimized ) ) {
 			$ewww_debug .= "updating existing record, path: $file_path, size: " . $image_size . "<br>";
 			// store info on the current image for future reference
 			$wpdb->update( $wpdb->ewwwio_images,
@@ -1449,7 +1515,7 @@ function ewww_image_optimizer_resize_from_meta_data($meta, $ID = null, $log = tr
 					'path' => $file_path,
 				),
 				array(
-					'id' => $already_optimized[0]['id'],
+					'id' => $already_optimized['id'],
 				));
 		}
 	}
@@ -1501,8 +1567,18 @@ function ewww_image_optimizer_resize_from_meta_data($meta, $ID = null, $log = tr
 					$ewww_debug .= "ims resize already exists, wahoo<br>";
 					$ewww_debug .= "ims path: $ims_path<br>";
 					$image_size = filesize($ims_path);
-					$query = $wpdb->prepare("SELECT id FROM $wpdb->ewwwio_images WHERE BINARY path = %s AND image_size = '$image_size'", $image_path);
-					if ( $already_optimized = $wpdb->get_results($query, ARRAY_A) ) {
+					$query = $wpdb->prepare("SELECT id,path FROM $wpdb->ewwwio_images WHERE path = %s AND image_size = '$image_size'", $image_path);
+					$optimized_query = $wpdb->get_results($query, ARRAY_A);
+					if (!empty($optimized_query)) {
+						foreach ( $optimized_query as $image ) {
+							if ( $image['path'] != $image_path ) {
+								$ewww_debug .= "{$image['path']} does not match $image_path, continuing our search<br>";
+							} else {
+								$already_optimized = $image;
+							}
+						}
+					}
+					if ( ! empty( $already_optimized ) ) {
 						$ewww_debug .= "updating existing record, path: $ims_path, size: " . $image_size . "<br>";
 						// store info on the current image for future reference
 						$wpdb->update( $wpdb->ewwwio_images,
@@ -1510,7 +1586,7 @@ function ewww_image_optimizer_resize_from_meta_data($meta, $ID = null, $log = tr
 								'path' => $ims_path,
 							),
 							array(
-								'id' => $already_optimized[0]['id'],
+								'id' => $already_optimized['id'],
 							));
 						$base_dir = $base_ims_dir;
 					}
@@ -2186,6 +2262,9 @@ function ewww_image_optimizer_savings_loop() {
 	} else {
 		$records_needed = 1000;
 	}
+	if ( $records_needed < 0 ) {
+		$records_needed = 0;
+	}
 	if ( function_exists('is_plugin_active_for_network') && is_plugin_active_for_network( EWWW_IMAGE_OPTIMIZER_PLUGIN_FILE_REL ) ) {	
 		if (function_exists('wp_get_sites')) {
 			add_filter('wp_is_large_network', 'ewww_image_optimizer_large_network', 20, 0);
@@ -2609,6 +2688,7 @@ function ewww_image_optimizer_options () {
 					$output[] = "<p class='description'>" . __( 'Provide paths containing images to be optimized using "Scan and Optimize" on the Bulk Optimize page or by Scheduled Optimization.', EWWW_IMAGE_OPTIMIZER_DOMAIN) . "<br>\n";
 					$output[] = "<b><a href='http://wordpress.org/support/plugin/ewww-image-optimizer'>" . __('Please submit a support request in the forums to have folders created by a particular plugin auto-included in the future.', EWWW_IMAGE_OPTIMIZER_DOMAIN) . "</a></b></p></td></tr>\n";
 				$output[] = "<tr><th><label for='ewww_image_optimizer_noauto'>" . __('Disable Automatic Optimization', EWWW_IMAGE_OPTIMIZER_DOMAIN) . "</label></th><td><input type='checkbox' id='ewww_image_optimizer_noauto' name='ewww_image_optimizer_noauto' value='true' " . ( ewww_image_optimizer_get_option('ewww_image_optimizer_noauto') == TRUE ? "checked='true'" : "" ) . " /> " . __('Images will not be optimized on upload. Images may be optimized with the Bulk Optimize tools or with Scheduled optimization.', EWWW_IMAGE_OPTIMIZER_DOMAIN) . "</td></tr>\n";
+				$output[] = "<tr><th><label for='ewww_image_optimizer_include_media_paths'>" . __('Include Media Library Folders', EWWW_IMAGE_OPTIMIZER_DOMAIN) . "</label></th><td><input type='checkbox' id='ewww_image_optimizer_include_media_paths' name='ewww_image_optimizer_include_media_paths' value='true' " . ( ewww_image_optimizer_get_option('ewww_image_optimizer_include_media_paths') == TRUE ? "checked='true'" : "" ) . " /> " . __('If you have disabled automatic optimization, enable this if you want Scheduled Optimization to include the latest two folders from the Media Library.', EWWW_IMAGE_OPTIMIZER_DOMAIN) . "</td></tr>\n";
 				$output[] = "<tr><th><label for='ewww_image_optimizer_skip_size'>" . __('Skip Small Images', EWWW_IMAGE_OPTIMIZER_DOMAIN) . "</label></th><td><input type='text' id='ewww_image_optimizer_skip_size' name='ewww_image_optimizer_skip_size' size='8' value='" . ewww_image_optimizer_get_option('ewww_image_optimizer_skip_size') . "'> " . __('Do not optimize images smaller than this (in bytes)', EWWW_IMAGE_OPTIMIZER_DOMAIN) . "</td></tr>\n";
 				$output[] = "<tr><th><label for='ewww_image_optimizer_skip_png_size'>" . __('Skip Large PNG Images', EWWW_IMAGE_OPTIMIZER_DOMAIN) . "</label></th><td><input type='text' id='ewww_image_optimizer_skip_png_size' name='ewww_image_optimizer_skip_png_size' size='8' value='" . ewww_image_optimizer_get_option('ewww_image_optimizer_skip_png_size') . "'> " . __('Do not optimize PNG images larger than this (in bytes)', EWWW_IMAGE_OPTIMIZER_DOMAIN) . "</td></tr>\n";
 				$output[] = "<tr><th><label for='ewww_image_optimizer_lossy_skip_full'>" . __('Exclude full-size images from lossy optimization', EWWW_IMAGE_OPTIMIZER_DOMAIN) . "</label></th><td><input type='checkbox' id='ewww_image_optimizer_lossy_skip_full' name='ewww_image_optimizer_lossy_skip_full' value='true' " . ( ewww_image_optimizer_get_option('ewww_image_optimizer_lossy_skip_full') == TRUE ? "checked='true'" : "" ) . " /></td></tr>\n";
