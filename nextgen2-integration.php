@@ -2,11 +2,14 @@
 class ewwwngg {
 	/* initializes the nextgen integration functions */
 	function ewwwngg() {
+		add_action('admin_init', array(&$this, 'admin_init'));
 		add_filter('ngg_manage_images_columns', array(&$this, 'ewww_manage_images_columns'));
 		add_filter('ngg_manage_images_number_of_columns', array(&$this, 'ewww_manage_images_number_of_columns'));
 		add_filter('ngg_manage_images_row_actions', array(&$this, 'ewww_manage_images_row_actions'));
 		add_action('ngg_manage_image_custom_column', array(&$this, 'ewww_manage_image_custom_column'), 10, 2);
-		add_action('ngg_added_new_image', array(&$this, 'ewww_added_new_image'));
+		if ( ! ewww_image_optimizer_get_option( 'ewww_image_optimizer_noauto' ) ) {
+			add_action('ngg_added_new_image', array(&$this, 'ewww_added_new_image'));
+		}
 		add_action('admin_action_ewww_ngg_manual', array(&$this, 'ewww_ngg_manual'));
 		add_action('admin_menu', array(&$this, 'ewww_ngg_bulk_menu'));
 		$i18ngg = strtolower  ( _n( 'Gallery', 'Galleries', 1, 'nggallery' ) );
@@ -17,6 +20,9 @@ class ewwwngg {
 		add_action('wp_ajax_bulk_ngg_filename', array(&$this, 'ewww_ngg_bulk_filename'));
 		add_action('wp_ajax_bulk_ngg_loop', array(&$this, 'ewww_ngg_bulk_loop'));
 		add_action('wp_ajax_bulk_ngg_cleanup', array(&$this, 'ewww_ngg_bulk_cleanup'));
+	}
+
+	function admin_init() {
 		register_setting('ewww_image_optimizer_options', 'ewww_image_optimizer_bulk_ngg_resume');
 		register_setting('ewww_image_optimizer_options', 'ewww_image_optimizer_bulk_ngg_attachments');
 	}
@@ -470,9 +476,32 @@ class ewwwngg {
 <?php	}
 }
 // initialize the plugin and the class
-add_action('init', 'ewwwngg');
+/*add_action('init', 'ewwwngg');
 
-function ewwwngg() {
+function ewwwngg() {*/
 	global $ewwwngg;
 	$ewwwngg = new ewwwngg();
+//}
+if ( class_exists( 'Mixin' ) && ! ewww_image_optimizer_get_option( 'ewww_image_optimizer_noauto' ) ) {
+	class EWWWIO_Gallery_Storage extends Mixin {
+		function generate_image_size( $image, $size, $params = null, $skip_defaults = false ) {
+			global $ewww_debug;
+			if (!defined('EWWW_IMAGE_OPTIMIZER_JPEGTRAN'))
+				ewww_image_optimizer_init();
+			$success = $this->call_parent( 'generate_image_size', $image, $size, $params, $skip_defaults );
+			if ( $success ) {
+				//$filename = $this->object->get_image_abspath($image, $size);
+				$filename = $success->fileName;
+				ewww_image_optimizer_aux_images_loop( $filename, true );
+				$ewww_debug .= "nextgen dynamic thumb saved: $filename <br>";
+				$image_size = filesize($filename);
+				$ewww_debug .= "optimized size: $image_size <br>";
+			}
+			ewww_image_optimizer_debug_log();
+			ewwwio_memory( __FUNCTION__ );
+			return $success;
+		}
+	}
+	$storage = C_Gallery_Storage::get_instance();
+	$storage->get_wrapped_instance()->add_mixin('EWWWIO_Gallery_Storage');
 }
