@@ -44,7 +44,12 @@ class ewwwngg {
 			$storage  = $registry->get_utility('I_Gallery_Storage');
 		}
 		// find the image id
-		$image_id = $storage->object->_get_image_id($image);
+		if ( is_array( $image ) ) {
+			$image_id = $image['id'];
+                	$image = $storage->object->_image_mapper->find($image_id, TRUE);
+		} else {
+			$image_id = $storage->object->_get_image_id($image);
+		}
 		$ewww_debug .= "image id: $image_id<br>";
 		// get an array of sizes available for the $image
 		$sizes = $storage->get_image_sizes();
@@ -122,6 +127,8 @@ class ewwwngg {
 	function ewww_manage_image_custom_column( $column_name, $id ) {
 		// once we've found our custom column
 		if( $column_name == 'ewww_image_optimizer' || $column_name == '' ) {
+			if (!defined('EWWW_IMAGE_OPTIMIZER_JPEGTRAN'))
+				ewww_image_optimizer_tool_init( false, false );
 			$output = '';
 			// creating the 'registry' object for working with nextgen
 			$registry = C_Component_Registry::get_instance();

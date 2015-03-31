@@ -42,6 +42,10 @@ function ewww_image_optimizer_cloud_init() {
 function ewww_image_optimizer_exec_init() {
 }
 
+// another stub
+function ewww_image_optimizer_tool_init( $admin = true ) {
+}
+
 // set some default option values
 function ewww_image_optimizer_set_defaults() {
         // set a few defaults (don't have any yet for the cloud-only plugin)
