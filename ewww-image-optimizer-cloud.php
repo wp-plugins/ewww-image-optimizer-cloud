@@ -35,6 +35,10 @@ function ewww_image_optimizer_cloud_init() {
 		define('EWWW_IMAGE_OPTIMIZER_CLOUD', TRUE);
 		define('EWWW_IMAGE_OPTIMIZER_NOEXEC', TRUE);
 	}
+	if ( ! ewww_image_optimizer_get_option( 'ewww_image_optimizer_cloud_key' ) ) {
+		add_action( 'network_admin_notices', 'ewww_image_optimizer_cloud_key_missing' );
+		add_action( 'admin_notices', 'ewww_image_optimizer_cloud_key_missing' );
+	}
 	ewwwio_memory( __FUNCTION__ );
 }
 
@@ -43,12 +47,24 @@ function ewww_image_optimizer_exec_init() {
 }
 
 // another stub
-function ewww_image_optimizer_tool_init( $admin = true ) {
+function ewww_image_optimizer_tool_init( $hook = false, $admin = true ) {
 }
 
 // set some default option values
 function ewww_image_optimizer_set_defaults() {
         // set a few defaults (don't have any yet for the cloud-only plugin)
+}
+
+// display a notice in the admin for a missing key
+function ewww_image_optimizer_cloud_key_missing() {
+	global $ewww_debug;
+	$ewww_debug .= '<b>ewww_image_optimizer_cloud_key_missing</b><br>';
+	if (function_exists('is_plugin_active_for_network') && is_plugin_active_for_network(plugin_basename(EWWW_IMAGE_OPTIMIZER_PLUGIN_FILE))) {
+		$options_page = 'settings.php';
+	} else {
+		$options_page = 'options-general.php';
+	}
+	echo "<div id='ewww-image-optimizer-cloud-key-missing' class='error'><p><strong>" . __( 'EWWW I.O. Cloud requires an API key to optimize images.', EWWW_IMAGE_OPTIMIZER_DOMAIN ) . "</strong> <a href='https://ewww.io/plans/'>" . __('Purchase an API key.', EWWW_IMAGE_OPTIMIZER_DOMAIN ) . "</a> <a href='$options_page?page=" . plugin_basename(EWWW_IMAGE_OPTIMIZER_PLUGIN_FILE) . "'>" . __( 'Then, enter it on the settings page.', EWWW_IMAGE_OPTIMIZER_DOMAIN) . "</a></p></div>";
 }
 
 // check the mimetype of the given file ($path) with various methods
