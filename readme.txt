@@ -14,13 +14,13 @@ EWWW Image Optimizer Cloud is a WordPress plugin that will automatically optimiz
 
 By default, EWWW Image Optimizer Cloud uses lossless optimization techniques, so your image quality will be exactly the same before and after the optimization. The only thing that will change is your file size. The one small exception to this is GIF animations. While the optimization is technically lossless, you will not be able to properly edit the animation again without performing an --unoptimize operation with gifsicle. The gif2png and jpg2png conversions are also lossless but the png2jpg process is not lossless. The lossy optimization for JPG and PNG files uses sophisticated algorithms to minimize perceptual quality loss, which is vastly different than setting a static quality/compression level.
 
-Images are optimized via cloud servers that utilize [jpegtran](http://jpegclub.org/jpegtran/), [jpegmini](http://www.jpegmini.com), [optipng](http://optipng.sourceforge.net/), [pngquant](http://pngquant.org/), [advpng](http://advancemame.sourceforge.net/comp-readme.html), [PngOptimizerCL](http://psydk.org/pngoptimizer), and [gifsicle](http://www.lcdf.org/gifsicle/). Images can optionally be converted to the most suitable file format.
+Images are optimized via cloud servers that utilize the latest tools available is lossless or lossy mode. Your images can optionally be converted to the most suitable file format.
 
-EWWW Image Optimizer Cloud offloads all optimization to designated servers which will work on any hosting platform. This can be desirable if you do not want to use the exec() function on your server, or prefer to offload the cpu demands of optimization for any reason. This is an ideal setup for web developers who can install this plugin for their clients with no risk due to the potentially insecure exec() function.
+EWWW Image Optimizer Cloud offloads all optimization to designated servers which will allow the plugin to work on any hosting platform. The lossy compression options use special algorithms to gain maximum compression with minimal loss of quality. Using the EWWW I.O. Cloud can also be desirable if you cannot, or do not want to use the exec() function on your server, or prefer to offload the cpu demands of optimization for any reason. This is an ideal setup for web developers who can install this plugin for their clients with no risk due to the potentially insecure exec() function.
 
 **Why use EWWW Image Optimizer Cloud?**
 
-1. **Your pages will load faster.** Smaller image sizes means faster page loads. This will make your visitors happy, and can increase ad revenue.
+1. **Your pages WILL load faster.** Smaller image sizes means faster page loads. Faster page loads means more revenue, and who doesn't want that?
 1. **Faster backups.** Smaller image sizes also means faster backups.
 1. **Less bandwidth usage.** Optimizing your images can save you hundreds of KB per image, which means significantly less bandwidth usage.
 1. **Better Privacy.** The cloud servers do not store any images after optimization is complete, and you retain all rights to any images processed via the cloud service.
@@ -82,7 +82,7 @@ Using EWWW IO:
 
 == Frequently Asked Questions ==
 
-= Google Pagespeed says my images need compressing or resizing, but I already optimized all my images. What do I do?
+= Google Pagespeed says my images need compressing or resizing, but I already optimized all my images. What do I do? =
 
 http://ewww.io/2014/12/05/pagespeed-says-my-images-need-more-work/
 
@@ -96,7 +96,7 @@ No, we leave that to other plugins like Imsanity.
 
 = Can I lower the compression setting for JPGs to save more space? =
 
-The lossy JPG optimization using JPEGmini will determine the ideal quality setting and save even more space. You cannot manually set the quality with this plugin.
+The lossy JPG optimization using TinyJPG and JPEGmini will determine the ideal quality setting and save even more space. You cannot manually set the quality with this plugin.
 
 = The bulk optimizer doesn't seem to be working, what can I do? =
 
@@ -108,12 +108,40 @@ That's not really a question, but since I made it up, I'll answer it. See these 
 http://developer.yahoo.com/performance/rules.html#opt_images
 https://developers.google.com/speed/docs/best-practices/payload#CompressImages
 https://developers.google.com/speed/docs/insights/OptimizeImages
-JPEGmini and Pngquant were recommended by EWWW IO users. JPEGmini is the best lossy compression tool that I have found for JPG images. Pngquant is an excellent lossy optimizer for PNGs, and is one of the tools used by TinyPNG.com.
 
 == Changelog ==
 
 = IMPORTANT =
 NOTE: The WebP naming scheme changed in 2.0.1 avoid filename conflicts. You will need to update your rewrite rules via the settings page, and run the WebP upgrade script. Every image in the Media Library with a WebP version using the old naming scheme will have a link to the upgrade process (in list view, not grid view).
+
+= 2.3.0 =
+* added: WebP url rewriting for sites using CDNs, requires output buffering and libxml in PHP, and may require modifications for some themes
+* added: option to include last two months of Media Library images in Scheduled Optimization (for those that have disabled Automatic Optimization)
+* added: automatic optimization for dynamic resizes generated by NextGEN 2+, particularly useful for Plus/Pro users
+* added: option to speed up lossy compression by using less compression
+* added: compatibility with NextGEN Public Uploader and other NextGEN 2 plugins that use legacy uploads
+* added: auto-optimization for MyArcade plugin
+* added: delay uploading with W3TC CDN function until after optimization
+* changed: resizes are not processed twice during upload. they were only optimized once previously, but this should give a small speed boost to uploads.
+* changed: manual optimize/convert/restore links require editor role, bulk optimization requires admin role, can be changed via filters
+* changed: disabling automatic optimization affects Nextgen, Nextcellent, and FlaGallery as well
+* changed: lossy compression for EWWW I.O. Cloud users now uses TinyJPG and TinyPNG for superior compression
+* changed: added index to ewwwio_images table and modified queries for substantial speed-up (and less load on database servers)
+* changed: Total Savings calculation now uses a single SQL statement, please report any related errors right away
+* changed: cleaned up flagallery and nextgen integration loading and made it folder-agnostic
+* changed: suppress plugin warnings when running 'init' outside of admin pages
+* fixed: Folders to Optimize was not being validated properly
+* fixed: notice on Unoptimized Images page
+* fixed: mysql error when attempting to query negative number of records on settings page
+* fixed: bug with image savings string in Spanish translation
+* fixed: referencing object as an array when scanning for Meta Slider images causes Scan & Optimize to fail
+* fixed: BIGINT errors when calculating savings
+* fixed: warning with Nextgen2 when plugin init had not yet occurred
+* fixed: Scan and Optimize consuming too much memory when checking mimetype of .po files
+* fixed: wp retina detection queries referencing object as an array
+* fixed: originals from converted resizes were not deleted during attachment removal
+* fixed: WebP versions of retina 2x images were not renamed properly
+* fixed: Unoptimized images displays an empty table for zero images to optimize
 
 = 2.2.2 =
 * fixed: previous fix for deleting webp images was not working properly
