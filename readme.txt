@@ -2,8 +2,8 @@
 Contributors: nosilver4u
 Tags: images, image, attachments, attachment, optimize, optimization, lossless, photos, photo, picture, pictures, seo, compression, image editor, gmagick, cloud, wp-cli
 Requires at least: 3.5
-Tested up to: 4.1
-Stable tag: 2.2.2
+Tested up to: 4.2-beta4
+Stable tag: 2.3.0
 License: GPLv3
 
 Reduce file sizes for images within WordPress including NextGEN, GRAND FlAGallery and more via paid cloud service.
