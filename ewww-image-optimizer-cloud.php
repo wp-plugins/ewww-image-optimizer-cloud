@@ -1,7 +1,7 @@
 <?php
 /**
  * Integrate cloud image optimization into WordPress.
- * @version 2.3.0
+ * @version 2.3.0.1
  * @package EWWW_Image_Optimizer_Cloud
  */
 /*
@@ -10,7 +10,7 @@ Plugin URI: http://ewww.io/
 Description: Reduce file sizes for images within WordPress including NextGEN Gallery and GRAND FlAGallery via paid cloud service.
 Author: Shane Bishop
 Text Domain: ewww-image-optimizer-cloud
-Version: 2.3.0
+Version: 2.3.0.1
 Author URI: https://ewww.io/
 License: GPLv3
 */
@@ -19,8 +19,13 @@ License: GPLv3
 define('EWWW_IMAGE_OPTIMIZER_DOMAIN', 'ewww-image-optimizer-cloud');
 // this is the full system path to the plugin file itself
 define('EWWW_IMAGE_OPTIMIZER_PLUGIN_FILE', __FILE__);
-// this is the path of the plugin file relative to the plugins/ folder
-define('EWWW_IMAGE_OPTIMIZER_PLUGIN_FILE_REL', 'ewww-image-optimizer-cloud/ewww-image-optimizer-cloud.php');
+if ( strtoupper( substr( PHP_OS, 0, 3 ) ) == 'WIN' ) {
+	// this is the path of the plugin file relative to the plugins/ folder
+	define('EWWW_IMAGE_OPTIMIZER_PLUGIN_FILE_REL', 'ewww-image-optimizer-cloud\ewww-image-optimizer-cloud.php');
+} else {
+	// this is the path of the plugin file relative to the plugins/ folder
+	define('EWWW_IMAGE_OPTIMIZER_PLUGIN_FILE_REL', 'ewww-image-optimizer-cloud/ewww-image-optimizer-cloud.php');
+}
 // this is the full system path to the plugin folder
 define('EWWW_IMAGE_OPTIMIZER_PLUGIN_PATH', plugin_dir_path(__FILE__));
 
