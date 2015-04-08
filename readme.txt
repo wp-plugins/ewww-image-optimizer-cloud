@@ -3,7 +3,7 @@ Contributors: nosilver4u
 Tags: images, image, attachments, attachment, optimize, optimization, lossless, photos, photo, picture, pictures, seo, compression, image editor, gmagick, cloud, wp-cli
 Requires at least: 3.5
 Tested up to: 4.2-beta4
-Stable tag: 2.3.0
+Stable tag: 2.3.1
 License: GPLv3
 
 Reduce file sizes for images within WordPress including NextGEN, GRAND FlAGallery and more via paid cloud service.
@@ -113,6 +113,15 @@ https://developers.google.com/speed/docs/insights/OptimizeImages
 
 = IMPORTANT =
 NOTE: The WebP naming scheme changed in 2.0.1 avoid filename conflicts. You will need to update your rewrite rules via the settings page, and run the WebP upgrade script. Every image in the Media Library with a WebP version using the old naming scheme will have a link to the upgrade process (in list view, not grid view).
+
+= 2.3.1 =
+* fixed: load_webp.js missing for cloud version
+* fixed: load_webp.js was being inserted regardless of the associated Alternative WebP Rewrites option
+* fixed: wrong slash in plugin path for Windows users with NextGEN and FlaGallery
+* fixed: extra comma in table upgrade sql
+* fixed: special characters malformed by alternate webp rewriting
+* updated: translation for Spanish
+* changed: progressbar color updated to match new colors in 4.2 for default theme
 
 = 2.3.0 =
 * added: WebP url rewriting for sites using CDNs, requires output buffering and libxml in PHP, and may require modifications for some themes
