@@ -97,6 +97,10 @@ function ewww_image_optimizer_import_init() {
 	$import_todo = 0;
 	$import_status['media'] = 0;
 	$import_todo += $wpdb->get_var("SELECT COUNT(posts.ID) FROM $wpdb->postmeta metas INNER JOIN $wpdb->posts posts ON posts.ID = metas.post_id WHERE posts.post_mime_type LIKE '%image%' AND metas.meta_key = '_wp_attachment_metadata' AND metas.meta_value LIKE '%ewww_image_optimizer%'");
+	if ( ! function_exists( 'is_plugin_active' ) ) {
+		// need to include the plugin library for the is_plugin_active function
+		require_once(ABSPATH . 'wp-admin/includes/plugin.php');
+	}
 	if (is_plugin_active('nextgen-gallery/nggallery.php') || (function_exists('is_plugin_active_for_network') && is_plugin_active_for_network('nextgen-gallery/nggallery.php'))) {
 		$nextgen_data = get_plugin_data(trailingslashit(WP_PLUGIN_DIR) . 'nextgen-gallery/nggallery.php', false, false);
 		$ewww_debug .= 'Nextgen version: ' . $nextgen_data['Version'] . '<br>';
@@ -453,7 +457,8 @@ function ewww_image_optimizer_image_scan($dir) {
 			continue;
 		} else {
 			$path = $path->getPathname();
-			if ( preg_match( '/\.(po|mo|php|txt|js|css|html)$/', $path ) ) {
+			if ( preg_match( '/\.(po|mo|pot|php|txt|js|css|html|woff|webp|json|svg|xml|ttf|otf|eot|md)$/', $path ) ) {
+				$ewww_debug .= "not a usable extension: $path<br>";
 				continue;
 			}
 			$mimetype = ewww_image_optimizer_mimetype($path, 'i');
@@ -548,6 +553,10 @@ function ewww_image_optimizer_aux_images_script($hook) {
 			$attachments = array_merge($attachments, ewww_image_optimizer_image_scan($parent_path));
 		}
 //	ewww_image_optimizer_debug_log();
+		if ( ! function_exists( 'is_plugin_active' ) ) {
+			// need to include the plugin library for the is_plugin_active function
+			require_once(ABSPATH . 'wp-admin/includes/plugin.php');
+		}
 		// collect a list of images for buddypress
 		if (is_plugin_active('buddypress/bp-loader.php') || (function_exists('is_plugin_active_for_network') && is_plugin_active_for_network('buddypress/bp-loader.php'))) {
 			// get the value of the wordpress upload directory
