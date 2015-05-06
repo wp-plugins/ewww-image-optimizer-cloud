@@ -182,7 +182,7 @@ function ewww_image_optimizer($file, $gallery_type = 4, $converted = false, $new
 	}
 	$ewww_debug .= "permissions: $file_perms, owner: $file_owner, group: $file_group <br>";
 	$type = ewww_image_optimizer_mimetype($file, 'i');
-	if (!$type) {
+	if ( strpos( $type, 'image' ) === FALSE ) {
 		//otherwise we store an error message since we couldn't get the mime-type
 		$msg = __('Missing finfo_file(), getimagesize() and mime_content_type() PHP functions', EWWW_IMAGE_OPTIMIZER_DOMAIN);
 		$ewww_debug .= "couldn't find any functions for mimetype detection<br>";

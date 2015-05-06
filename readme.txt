@@ -2,7 +2,7 @@
 Contributors: nosilver4u
 Tags: images, image, attachments, attachment, optimize, optimization, lossless, photos, photo, picture, pictures, seo, compression, image editor, gmagick, cloud, wp-cli
 Requires at least: 3.5
-Tested up to: 4.2-beta4
+Tested up to: 4.2
 Stable tag: 2.3.2
 License: GPLv3
 
