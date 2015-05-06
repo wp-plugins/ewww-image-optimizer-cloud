@@ -382,6 +382,11 @@ class ewwwngg {
 				'_wpnonce' => wp_create_nonce('ewww-image-optimizer-bulk'),
 				'gallery' => 'nextgen',
 				'attachments' => $images,
+				'license_exceeded' => __( 'License Exceeded', EWWW_IMAGE_OPTIMIZER_DOMAIN ),
+				'operation_stopped' => __( 'Optimization stopped, reload page to resume.', EWWW_IMAGE_OPTIMIZER_DOMAIN ),
+				'operation_interrupted' => __( 'Operation Interrupted', EWWW_IMAGE_OPTIMIZER_DOMAIN ),
+				'temporary_failure' => __( 'Temporary failure, seconds left to retry:', EWWW_IMAGE_OPTIMIZER_DOMAIN ),
+				'remove_failed' => __( 'Could not remove image from table.', EWWW_IMAGE_OPTIMIZER_DOMAIN ),
 			)
 		);
 	}
@@ -507,7 +512,7 @@ if ( ! class_exists( 'EWWWIO_Gallery_Storage' ) && class_exists( 'Mixin' ) && ! 
 	class EWWWIO_Gallery_Storage extends Mixin {
 		function generate_image_size( $image, $size, $params = null, $skip_defaults = false ) {
 			global $ewww_debug;
-			if (!defined('EWWW_IMAGE_OPTIMIZER_JPEGTRAN'))
+			if (!defined('EWWW_IMAGE_OPTIMIZER_CLOUD'))
 				ewww_image_optimizer_init();
 			$success = $this->call_parent( 'generate_image_size', $image, $size, $params, $skip_defaults );
 			if ( $success ) {

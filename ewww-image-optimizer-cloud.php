@@ -19,13 +19,8 @@ License: GPLv3
 define('EWWW_IMAGE_OPTIMIZER_DOMAIN', 'ewww-image-optimizer-cloud');
 // this is the full system path to the plugin file itself
 define('EWWW_IMAGE_OPTIMIZER_PLUGIN_FILE', __FILE__);
-if ( strtoupper( substr( PHP_OS, 0, 3 ) ) == 'WIN' ) {
-	// this is the path of the plugin file relative to the plugins/ folder
-	define('EWWW_IMAGE_OPTIMIZER_PLUGIN_FILE_REL', 'ewww-image-optimizer-cloud\ewww-image-optimizer-cloud.php');
-} else {
-	// this is the path of the plugin file relative to the plugins/ folder
-	define('EWWW_IMAGE_OPTIMIZER_PLUGIN_FILE_REL', 'ewww-image-optimizer-cloud/ewww-image-optimizer-cloud.php');
-}
+// this is the path of the plugin file relative to the plugins/ folder
+define('EWWW_IMAGE_OPTIMIZER_PLUGIN_FILE_REL', 'ewww-image-optimizer-cloud/ewww-image-optimizer-cloud.php');
 // this is the full system path to the plugin folder
 define('EWWW_IMAGE_OPTIMIZER_PLUGIN_PATH', plugin_dir_path(__FILE__));
 
