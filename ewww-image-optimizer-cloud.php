@@ -150,7 +150,7 @@ function ewww_image_optimizer($file, $gallery_type = 4, $converted = false, $new
 	// check that the file exists
 	if (FALSE === file_exists($file)) {
 		// tell the user we couldn't find the file
-		$msg = sprintf(__("Could not find <span class='code'>%s</span>", EWWW_IMAGE_OPTIMIZER_DOMAIN), $file);
+		$msg = sprintf( __( 'Could not find %s', EWWW_IMAGE_OPTIMIZER_DOMAIN ), "<span class='code'>$file</span>" );
 		$ewww_debug .= "file doesn't appear to exist: $file <br>";
 		// send back the above message
 		return array(false, $msg, $converted, $original);
@@ -158,21 +158,21 @@ function ewww_image_optimizer($file, $gallery_type = 4, $converted = false, $new
 	// check that the file is writable
 	if ( FALSE === is_writable($file) ) {
 		// tell the user we can't write to the file
-		$msg = sprintf(__("<span class='code'>%s</span> is not writable", EWWW_IMAGE_OPTIMIZER_DOMAIN), $file);
+		$msg = sprintf( __( '%s is not writable', EWWW_IMAGE_OPTIMIZER_DOMAIN ), "<span class='code'>$file</span>" );
 		$ewww_debug .= "couldn't write to the file $file<br>";
 		// send back the above message
 		return array(false, $msg, $converted, $original);
 	}
-	if (function_exists('fileperms'))
-		$file_perms = substr(sprintf('%o', fileperms($file)), -4);
+	if ( function_exists( 'fileperms' ) )
+		$file_perms = substr( sprintf( '%o', fileperms( $file ) ), -4 );
 	$file_owner = 'unknown';
 	$file_group = 'unknown';
-	if (function_exists('posix_getpwuid')) {
-		$file_owner = posix_getpwuid(fileowner($file));
+	if ( function_exists( 'posix_getpwuid' ) ) {
+		$file_owner = posix_getpwuid( fileowner( $file ) );
 		$file_owner = $file_owner['name'];
 	}
-	if (function_exists('posix_getgrgid')) {
-		$file_group = posix_getgrgid(filegroup($file));
+	if ( function_exists( 'posix_getgrgid' ) ) {
+		$file_group = posix_getgrgid( filegroup( $file ) );
 		$file_group = $file_group['name'];
 	}
 	$ewww_debug .= "permissions: $file_perms, owner: $file_owner, group: $file_group <br>";
@@ -187,6 +187,9 @@ function ewww_image_optimizer($file, $gallery_type = 4, $converted = false, $new
 		$skip_lossy = true;
 	} else {
 		$skip_lossy = false;
+	}
+	if ( ini_get( 'max_execution_time' ) < 90 && ewww_image_optimizer_stl_check() ) {
+		set_time_limit( 0 );
 	}
 	// if the full-size image was converted
 	if ($converted) {

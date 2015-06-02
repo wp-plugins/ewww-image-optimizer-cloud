@@ -1,7 +1,7 @@
 <?php
 // common functions for Standard and Cloud plugins
 
-define( 'EWWW_IMAGE_OPTIMIZER_VERSION', '241.2' );
+define( 'EWWW_IMAGE_OPTIMIZER_VERSION', '242.0' );
 
 // initialize debug global
 $disabled = ini_get( 'disable_functions' );
@@ -164,7 +164,7 @@ function ewww_image_optimizer_filter_page_output( $buffer ) {
 	}
 	// modify buffer here, and then return the updated code
 	if ( class_exists( 'DOMDocument' ) ) {
-		preg_match( '/.+<head>/s', $buffer, $html_head );
+		preg_match( '/.+<head[^>]*>/s', $buffer, $html_head );
 		if ( empty( $html_head ) ) {
 			return $buffer;
 		}
@@ -172,12 +172,20 @@ function ewww_image_optimizer_filter_page_output( $buffer ) {
 		$libxml_previous_error_reporting = libxml_use_internal_errors( true );
 		$html->encoding = 'utf-8';
 //		$html->loadHTML(utf8_decode($buffer));
-		$html->loadHTML( $buffer );
+		if ( preg_match( '/<.DOCTYPE.+xhtml/', $buffer ) ) {
+			$html->recover = true;
+			$xhtml_parse = $html->loadXML( $buffer );
+			$ewww_debug .= 'parsing as xhtml<br>';
+		} elseif ( empty( $xhtml_parse ) ) {
+			$html->loadHTML( $buffer );
+			$ewww_debug .= 'parsing as html<br>';
+		}
 		$images = $html->getElementsByTagName( 'img' );
 		foreach ( $images as $image ) {
 			if ( $image->parentNode->tagName == 'noscript' ) {
 				continue;
 			}
+			$ewww_debug .= 'parsing an image<br>';
 			$home_url = get_home_url();
 			$file = $image->getAttribute( 'src' );
 			$filepath = ABSPATH . str_replace( $home_url, '', $file );
@@ -260,6 +268,7 @@ function ewww_image_optimizer_filter_page_output( $buffer ) {
 		}
 		$links = $html->getElementsByTagName( 'a' );
 		foreach ( $links as $link ) {
+			$ewww_debug .= 'parsing a link<br>';
 			$home_url = get_home_url();
 			if ( $link->getAttribute( 'data-src' ) && $link->getAttribute( 'data-thumbnail' ) ) {
 				$file = $link->getAttribute( 'data-src' );
@@ -279,7 +288,17 @@ function ewww_image_optimizer_filter_page_output( $buffer ) {
 				
 			}
 		}
-		$buffer = $html->saveHTML($html->documentElement);
+		$ewww_debug .= 'preparing to dump page back to $buffer<br>';
+		if ( ! empty( $xhtml_parse ) ) {
+			$buffer = $html->saveXML( $html->documentElement );
+		} else {
+			$buffer = $html->saveHTML( $html->documentElement );
+		}
+		if ( empty( $buffer ) ) {
+			$ewww_debug .= 'save to $buffer failed<br>';
+		} else {
+			$ewww_debug .= $buffer;
+		}
 		libxml_clear_errors();
 		libxml_use_internal_errors($libxml_previous_error_reporting);
 		if ( ! empty( $html_head ) ) {
@@ -316,6 +335,21 @@ function ewwwio_memory( $function ) {
 	if ( WP_DEBUG ) {
 		global $ewww_memory;
 //		$ewww_memory .= $function . ': ' . memory_get_usage(true) . "\n";
+	}
+}
+
+// function to check if set_time_limit() is disabled
+function ewww_image_optimizer_stl_check() {
+	global $ewww_debug;
+	$ewww_debug .= "<b>ewww_image_optimizer_stl_check()</b><br>";
+	$disabled = ini_get('disable_functions');
+	$ewww_debug .= "disable_functions = $disabled <br>";
+	if ( preg_match( '/set_time_limit/', $disabled ) ) {
+		ewwwio_memory( __FUNCTION__ );
+		return false;
+	} else {
+		ewwwio_memory( __FUNCTION__ );
+		return true;
 	}
 }
 
@@ -1817,7 +1851,6 @@ function ewww_image_optimizer_update_attachment_metadata($meta, $ID) {
  * Called after `wp_generate_attachment_metadata` is completed.
  */
 function ewww_image_optimizer_resize_from_meta_data( $meta, $ID = null, $log = true ) {
-	// TODO: figure out why full size images don't get uploaded/updated to S3 storage with W3TC
 	global $ewww_debug;
 	global $wpdb;
 	// may also need to track their attachment ID as well
