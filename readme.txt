@@ -114,6 +114,11 @@ https://developers.google.com/speed/docs/insights/OptimizeImages
 = IMPORTANT =
 NOTE: The WebP naming scheme changed in 2.0.1 avoid filename conflicts. You will need to update your rewrite rules via the settings page, and run the WebP upgrade script. Every image in the Media Library with a WebP version using the old naming scheme will have a link to the upgrade process (in list view, not grid view).
 
+= 2.4.4 =
+* fixed: Alt WebP Rewriting unable to find images when WP url and Site url are different (subdirectory install)
+* fixed: Alt WebP Rewriting mangles certain characters due to older versions of libxml
+* fixed: Alt WebP Rewriting parses xml files when it should leave them alone - feeds and sitemaps
+
 = 2.4.3 =
 * fixed: Alt WebP Rewriting breaks themes with <header> elements
 
