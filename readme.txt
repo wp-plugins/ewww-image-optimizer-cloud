@@ -3,7 +3,7 @@ Contributors: nosilver4u
 Tags: images, image, attachments, attachment, optimize, optimization, lossless, photos, photo, picture, pictures, seo, compression, image editor, gmagick, cloud, wp-cli
 Requires at least: 3.5
 Tested up to: 4.2.2
-Stable tag: 2.4.6
+Stable tag: 2.4.7
 License: GPLv3
 
 Reduce file sizes for images within WordPress including NextGEN, GRAND FlAGallery and more via paid cloud service.
@@ -110,6 +110,10 @@ https://developers.google.com/speed/docs/best-practices/payload#CompressImages
 https://developers.google.com/speed/docs/insights/OptimizeImages
 
 == Changelog ==
+
+= 2.4.7 =
+* fixed: defer nextgen loading until 'init' to prevent activation/upgrade problems
+* fixed: nextgen dynamic image generation fails if API subscription is out of image credits
 
 = 2.4.6 =
 * fixed: check that image exists in WP_Image_Editor extension
