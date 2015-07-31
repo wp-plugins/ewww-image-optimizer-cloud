@@ -1,7 +1,7 @@
 <?php
 /**
  * Integrate cloud image optimization into WordPress.
- * @version 2.4.7.4
+ * @version 2.4.7.6
  * @package EWWW_Image_Optimizer_Cloud
  */
 /*
@@ -10,7 +10,7 @@ Plugin URI: http://ewww.io/
 Description: Reduce file sizes for images within WordPress including NextGEN Gallery and GRAND FlAGallery via paid cloud service.
 Author: Shane Bishop
 Text Domain: ewww-image-optimizer-cloud
-Version: 2.4.7.4
+Version: 2.4.7.6
 Author URI: https://ewww.io/
 License: GPLv3
 */
@@ -28,8 +28,7 @@ require_once(EWWW_IMAGE_OPTIMIZER_PLUGIN_PATH . 'common.php');
 
 // check to see if the cloud constant is defined (which would mean we've already run init) and then set it properly if not
 function ewww_image_optimizer_cloud_init() {
-        global $ewww_debug;
-        $ewww_debug .= "<b>ewww_image_optimizer_cloud_init()</b><br>";
+	ewwwio_debug_message( '<b>' . __FUNCTION__ . '()</b>' );
 	ewww_image_optimizer_disable_tools();
 	if (!defined('EWWW_IMAGE_OPTIMIZER_CLOUD')) {
 		define('EWWW_IMAGE_OPTIMIZER_CLOUD', TRUE);
@@ -57,9 +56,12 @@ function ewww_image_optimizer_set_defaults() {
 
 // display a notice in the admin for a missing key
 function ewww_image_optimizer_cloud_key_missing() {
-	global $ewww_debug;
-	$ewww_debug .= '<b>ewww_image_optimizer_cloud_key_missing</b><br>';
-	if (function_exists('is_plugin_active_for_network') && is_plugin_active_for_network(plugin_basename(EWWW_IMAGE_OPTIMIZER_PLUGIN_FILE))) {
+	ewwwio_debug_message( '<b>' . __FUNCTION__ . '()</b>' );
+	if ( ! function_exists( 'is_plugin_active_for_network' ) && is_multisite() ) {
+		// need to include the plugin library for the is_plugin_active function
+		require_once( ABSPATH . 'wp-admin/includes/plugin.php' );
+	}
+	if ( is_multisite() && is_plugin_active_for_network( EWWW_IMAGE_OPTIMIZER_PLUGIN_FILE_REL ) ) {
 		$options_page = 'settings.php';
 	} else {
 		$options_page = 'options-general.php';
@@ -70,9 +72,8 @@ function ewww_image_optimizer_cloud_key_missing() {
 // check the mimetype of the given file ($path) with various methods
 // valid values for $type are 'b' for binary or 'i' for image
 function ewww_image_optimizer_mimetype($path, $case) {
-	global $ewww_debug;
-	$ewww_debug .= "<b>ewww_image_optimizer_mimetype()</b><br>";
-	$ewww_debug .= "testing mimetype: $path <br>";
+	ewwwio_debug_message( '<b>' . __FUNCTION__ . '()</b>' );
+	ewwwio_debug_message( "testing mimetype: $path" );
 	if ( $case == 'i' && preg_match( '/^RIFF.+WEBPVP8/', file_get_contents( $path, NULL, NULL, 0, 16 ) ) ) { 
 		return 'image/webp';
 	}
@@ -83,7 +84,7 @@ function ewww_image_optimizer_mimetype($path, $case) {
 		$type = explode(';', finfo_file($finfo, $path));
 		$type = $type[0];
 		finfo_close($finfo);
-		$ewww_debug .= "finfo_file: $type <br>";
+		ewwwio_debug_message( "finfo_file: $type" );
 	}
 	// see if we can use the getimagesize function
 	if (empty($type) && function_exists('getimagesize') && $case === 'i') {
@@ -94,13 +95,13 @@ function ewww_image_optimizer_mimetype($path, $case) {
 			// store the mime-type
 			$type = $type['mime'];
 		}
-		$ewww_debug .= "getimagesize: $type <br>";
+		ewwwio_debug_message( "getimagesize: $type" );
 	}
 	// see if we can use mime_content_type
 	if (empty($type) && function_exists('mime_content_type')) {
 		// retrieve and store the mime-type
 		$type = mime_content_type($path);
-		$ewww_debug .= "mime_content_type: $type <br>";
+		ewwwio_debug_message( "mime_content_type: $type" );
 	}
 	// if we are dealing with a binary, and found an executable
 	if ($case == 'b' && preg_match('/executable/', $type)) {
@@ -130,8 +131,7 @@ function ewww_image_optimizer_mimetype($path, $case) {
  * @returns array
  */
 function ewww_image_optimizer($file, $gallery_type = 4, $converted = false, $new = false, $fullsize = false) {
-	global $ewww_debug;
-	$ewww_debug .= "<b>ewww_image_optimizer()</b><br>";
+	ewwwio_debug_message( '<b>' . __FUNCTION__ . '()</b>' );
 	// if the plugin gets here without initializing, we need to run through some things first
 	if ( ! defined('EWWW_IMAGE_OPTIMIZER_CLOUD' ) ) {
 		ewww_image_optimizer_init();
@@ -140,7 +140,7 @@ function ewww_image_optimizer($file, $gallery_type = 4, $converted = false, $new
 	if (true === $bypass_optimization) { 
 		// tell the user optimization was skipped 
 		$msg = __( "Optimization skipped", EWWW_IMAGE_OPTIMIZER_DOMAIN ); 
-		$ewww_debug .= "optimization bypassed: $file <br>"; 
+		ewwwio_debug_message( "optimization bypassed: $file" );
 		// send back the above message 
 		return array(false, $msg, $converted, $file); 
 	}
@@ -151,7 +151,7 @@ function ewww_image_optimizer($file, $gallery_type = 4, $converted = false, $new
 	if (FALSE === file_exists($file)) {
 		// tell the user we couldn't find the file
 		$msg = sprintf( __( 'Could not find %s', EWWW_IMAGE_OPTIMIZER_DOMAIN ), "<span class='code'>$file</span>" );
-		$ewww_debug .= "file doesn't appear to exist: $file <br>";
+		ewwwio_debug_message( "file doesn't appear to exist: $file" );
 		// send back the above message
 		return array(false, $msg, $converted, $original);
 	}
@@ -159,7 +159,7 @@ function ewww_image_optimizer($file, $gallery_type = 4, $converted = false, $new
 	if ( FALSE === is_writable($file) ) {
 		// tell the user we can't write to the file
 		$msg = sprintf( __( '%s is not writable', EWWW_IMAGE_OPTIMIZER_DOMAIN ), "<span class='code'>$file</span>" );
-		$ewww_debug .= "couldn't write to the file $file<br>";
+		ewwwio_debug_message( "couldn't write to the file $file" );
 		// send back the above message
 		return array(false, $msg, $converted, $original);
 	}
@@ -175,12 +175,12 @@ function ewww_image_optimizer($file, $gallery_type = 4, $converted = false, $new
 		$file_group = posix_getgrgid( filegroup( $file ) );
 		$file_group = $file_group['name'];
 	}
-	$ewww_debug .= "permissions: $file_perms, owner: $file_owner, group: $file_group <br>";
+	ewwwio_debug_message( "permissions: $file_perms, owner: $file_owner, group: $file_group" );
 	$type = ewww_image_optimizer_mimetype($file, 'i');
 	if ( strpos( $type, 'image' ) === FALSE ) {
 		//otherwise we store an error message since we couldn't get the mime-type
 		$msg = __('Missing finfo_file(), getimagesize() and mime_content_type() PHP functions', EWWW_IMAGE_OPTIMIZER_DOMAIN);
-		$ewww_debug .= "couldn't find any functions for mimetype detection<br>";
+		ewwwio_debug_message( 'could not find any functions for mimetype detection' );
 		return array(false, $msg, $converted, $original);
 	}
 	if ( ewww_image_optimizer_get_option( 'ewww_image_optimizer_lossy_skip_full' ) && $fullsize ) {
@@ -193,39 +193,39 @@ function ewww_image_optimizer($file, $gallery_type = 4, $converted = false, $new
 	}
 	// if the full-size image was converted
 	if ($converted) {
-		$ewww_debug .= "full-size image was converted, need to rebuild filename for meta<br>";
+		ewwwio_debug_message( 'full-size image was converted, need to rebuild filename for meta' );
 		$filenum = $converted;
 		// grab the file extension
-		preg_match('/\.\w+$/', $file, $fileext);
+		preg_match( '/\.\w+$/', $file, $fileext );
 		// strip the file extension
-		$filename = str_replace($fileext[0], '', $file);
+		$filename = str_replace( $fileext[0], '', $file );
 		// grab the dimensions
-		preg_match('/-\d+x\d+(-\d+)*$/', $filename, $fileresize);
+		preg_match( '/-\d+x\d+(-\d+)*$/', $filename, $fileresize );
 		// strip the dimensions
-		$filename = str_replace($fileresize[0], '', $filename);
+		$filename = str_replace( $fileresize[0], '', $filename );
 		// reconstruct the filename with the same increment (stored in $converted) as the full version
 		$refile = $filename . '-' . $filenum . $fileresize[0] . $fileext[0];
 		// rename the file
-		rename($file, $refile);
-		$ewww_debug .= "moved $file to $refile<br>";
+		rename( $file, $refile );
+		ewwwio_debug_message( "moved $file to $refile" );
 		// and set $file to the new filename
 		$file = $refile;
 		$original = $file;
 	}
 	// get the original image size
 	$orig_size = filesize($file);
-	$ewww_debug .= "original filesize: $orig_size<br>";
+	ewwwio_debug_message( "original filesize: $orig_size" );
 	if ( $orig_size < ewww_image_optimizer_get_option( 'ewww_image_optimizer_skip_size' ) ) {
 		// tell the user optimization was skipped
 		$msg = __( "Optimization skipped", EWWW_IMAGE_OPTIMIZER_DOMAIN );
-		$ewww_debug .= "optimization bypassed due to filesize: $file <br>";
+		ewwwio_debug_message( "optimization bypassed due to filesize: $file" );
 		// send back the above message
 		return array(false, $msg, $converted, $file);
 	}
 	if ( $type == 'image/png' && ewww_image_optimizer_get_option( 'ewww_image_optimizer_skip_png_size' ) && $orig_size > ewww_image_optimizer_get_option( 'ewww_image_optimizer_skip_png_size' ) ) {
 		// tell the user optimization was skipped
 		$msg = __( "Optimization skipped", EWWW_IMAGE_OPTIMIZER_DOMAIN );
-		$ewww_debug .= "optimization bypassed due to filesize: $file <br>";
+		ewwwio_debug_message( "optimization bypassed due to filesize: $file" );
 		// send back the above message
 		return array(false, $msg, $converted, $file);
 	}
@@ -236,6 +236,8 @@ function ewww_image_optimizer($file, $gallery_type = 4, $converted = false, $new
 	$optimize = false;
 	// toggle the convert process to ON
 	$convert = true;
+	// allow other plugins to mangle the image however they like prior to optimization
+	do_action( 'ewww_image_optimizer_pre_optimization', $file, $type );
 	// run the appropriate optimization/conversion for the mime-type
 	switch($type) {
 		case 'image/jpeg':
@@ -277,7 +279,7 @@ function ewww_image_optimizer($file, $gallery_type = 4, $converted = false, $new
 		case 'image/png':
 			// png2jpg conversion is turned on, and the image is in the wordpress media library
 			if ( ( ewww_image_optimizer_get_option( 'ewww_image_optimizer_png_to_jpg' ) || ! empty( $_GET['ewww_convert'] ) ) && $gallery_type == 1 && ! $skip_lossy && ( ! ewww_image_optimizer_png_alpha( $file ) || ewww_image_optimizer_jpg_background() ) ) {
-				$ewww_debug .= "PNG to JPG conversion turned on<br>";
+				ewwwio_debug_message( 'PNG to JPG conversion turned on' );
 				// if the user set a fill background for transparency
 				$background = '';
 				if ($background = ewww_image_optimizer_jpg_background()) {
@@ -312,7 +314,7 @@ function ewww_image_optimizer($file, $gallery_type = 4, $converted = false, $new
 					list($jpgfile, $filenum) = ewww_image_optimizer_unique_filename($file, '.jpg');
 				}
 			} else {
-				$ewww_debug .= "PNG to JPG conversion turned off<br>";
+				ewwwio_debug_message( 'PNG to JPG conversion turned off' );
 				// turn the conversion process OFF
 				$convert = false;
 				$jpgfile = '';
@@ -375,6 +377,9 @@ function ewww_image_optimizer($file, $gallery_type = 4, $converted = false, $new
 			// if not a JPG, PNG, or GIF, tell the user we don't work with strangers
 			return array($file, __('Unknown type: ' . $type, EWWW_IMAGE_OPTIMIZER_DOMAIN), $converted, $original);
 	}
+	// allow other plugins to run operations on the images after optimization.
+	// NOTE: it is recommended to do any image modifications prior to optimization, otherwise you risk un-optimizing your images here.
+	do_action( 'ewww_image_optimizer_post_optimization', $file, $type );
 	// if their cloud api license limit has been exceeded
 	if ($result == 'exceeded') {
 		return array($file, __('License exceeded', EWWW_IMAGE_OPTIMIZER_DOMAIN), $converted, $original);
@@ -392,15 +397,14 @@ function ewww_image_optimizer($file, $gallery_type = 4, $converted = false, $new
 // creates webp images alongside JPG and PNG files
 // needs a filename, the filesize, mimetype, and the path to the cwebp binary (null for cloud)
 function ewww_image_optimizer_webp_create( $file, $orig_size, $type, $tool ) {
-	global $ewww_debug;
-	$ewww_debug .= '<b>ewww_image_optimizer_webp_create()</b><br>';
+	ewwwio_debug_message( '<b>' . __FUNCTION__ . '()</b>' );
 	$webpfile = $file . '.webp';
 	if ( file_exists( $webpfile ) || ! ewww_image_optimizer_get_option('ewww_image_optimizer_webp') ) {
 		return;
 	}
 	ewww_image_optimizer_cloud_optimizer($file, $type, false, $webpfile, 'image/webp');
 	if ( file_exists( $webpfile ) && $orig_size < filesize( $webpfile ) ) {
-		$ewww_debug .= 'webp file was too big, deleting<br>';
+		ewwwio_debug_message( 'webp file was too big, deleting' );
 		unlink( $webpfile );
 	}
 	ewwwio_memory( __FUNCTION__ );
