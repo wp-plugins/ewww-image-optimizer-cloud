@@ -2,7 +2,7 @@
 Contributors: nosilver4u
 Tags: images, image, attachments, attachment, optimize, optimization, lossless, photos, photo, picture, pictures, seo, compression, image editor, gmagick, cloud, wp-cli
 Requires at least: 3.5
-Tested up to: 4.2.2
+Tested up to: 4.3
 Stable tag: 2.4.7
 License: GPLv3
 
@@ -14,7 +14,7 @@ EWWW Image Optimizer Cloud is a WordPress plugin that will automatically optimiz
 
 By default, EWWW Image Optimizer Cloud uses lossless optimization techniques, so your image quality will be exactly the same before and after the optimization. The only thing that will change is your file size. The one small exception to this is GIF animations. While the optimization is technically lossless, you will not be able to properly edit the animation again without performing an --unoptimize operation with gifsicle. The gif2png and jpg2png conversions are also lossless but the png2jpg process is not lossless. The lossy optimization for JPG and PNG files uses sophisticated algorithms to minimize perceptual quality loss, which is vastly different than setting a static quality/compression level.
 
-Images are optimized via cloud servers that utilize the latest tools available is lossless or lossy mode. Your images can optionally be converted to the most suitable file format.
+Images are optimized via cloud servers that utilize the latest tools available in lossless or lossy mode. Your images can optionally be converted to the most suitable file format.
 
 EWWW Image Optimizer Cloud offloads all optimization to designated servers which will allow the plugin to work on any hosting platform. The lossy compression options use special algorithms to gain maximum compression with minimal loss of quality. Using the EWWW I.O. Cloud can also be desirable if you cannot, or do not want to use the exec() function on your server, or prefer to offload the cpu demands of optimization for any reason. This is an ideal setup for web developers who can install this plugin for their clients with no risk due to the potentially insecure exec() function.
 
@@ -43,7 +43,7 @@ All images created by the built-in WP_Image_Editor class will be automatically o
 
 = Optimize Everything Else =
 
-Site admins can specify any folder within their wordpress folder to be optimized. The 'Scan and Optimize' option under Media->Bulk Optimize will optimize theme images, BuddyPress avatars, BuddyPress Activity Plus images, Meta Slider slides, WP Symposium images, GD bbPress attachments, Grand Media Galleries, and any user-specified folders. Additionally, this tool can run on an hourly basis via wp_cron to keep newly uploaded images optimized. Scheduled optimization should not be used for any plugin that uses the built-in Wordpress image functions, unless you have disabled automatic optimization.
+Site admins can specify any folder within their wordpress folder to be optimized. The 'Scan and Optimize' option under Media->Bulk Optimize will optimize theme images, BuddyPress avatars, BuddyPress Activity Plus images, Meta Slider slides, WP Symposium images, GD bbPress attachments, Grand Media Galleries, and any user-specified folders. Additionally, this tool can run on an hourly basis via wp_cron to keep newly uploaded images optimized. Scheduled optimization should not be used for any plugin that uses the built-in Wordpress image functions.
 
 = WP-CLI =
 
@@ -52,7 +52,6 @@ Allows you to run all Bulk Optimization processes from your command line, instea
 = NextGEN Gallery =
 
 Features optimization on upload capability, re-optimization, and bulk optimizing. The NextGEN Bulk Optimize function is located near the bottom of the NextGEN menu, and will optimize all images in all galleries. It is also possible to optimize groups of images in a gallery, or multiple galleries at once.
-NOTE: Does not optimize thumbnails on initial upload for legacy (1.9.x) versions of NextGEN, but instead provides a button to optimize thumbnails after uploading images.
 
 = NextCellent Gallery =
 
@@ -70,7 +69,7 @@ Uploads are automatically optimized. Look for Optimize under the Image Store (Ga
 
 1. Upload the 'ewww-image-optimizer-cloud' plugin to your '/wp-content/plugins/' directory.
 1. Activate the plugin through the 'Plugins' menu in WordPress.
-1. Purchase an API key via http://ewww.io/plans/.
+1. Purchase an API key via https://ewww.io/plans/.
 1. Enter your API key on the plugin settings page and enable the image formats you want to optimize.
 1. *Optional* Visit the settings page to enable/disable specific tools and turn on advanced optimization features.
 1. Done!
@@ -105,11 +104,29 @@ If it doesn't seem to work at all, check for javascript problems using the devel
 = I want to know more about image optimization. =
 
 That's not really a question, but since I made it up, I'll answer it. See these resources:
-http://developer.yahoo.com/performance/rules.html#opt_images
-https://developers.google.com/speed/docs/best-practices/payload#CompressImages
-https://developers.google.com/speed/docs/insights/OptimizeImages
+http://developer.yahoo.com/performance/rules.html#opt_images  
+https://developers.google.com/speed/docs/best-practices/payload#CompressImages  
+https://developers.google.com/speed/docs/insights/OptimizeImages  
 
 == Changelog ==
+
+= 2.5.0 =
+* deprecated: Disable Automatic Optimization and Include Media Folders options: will be removed from the UI in 2.6 but remain functional if enabled
+* added: deferred optimization lets you upload images with no delays, and optimize later automatically
+* added: wp_cron filter has additional parameter to allow setting scheduled & deferred optimization on different freqencies
+* added: remote images on S3 can be fetched when using WP Offload S3 (Amazon S3 and Cloudfront)
+* added: remote images on Azure Storage can be fetched when using Windows Azure Storage for WordPress
+* added: (re)upload to Dreamspeed after optimization
+* added: action hooks before and after optimization
+* added: filter to modify the number of records queried when counting unoptimized images (default 3000)
+* added: check for retina images generated without WP Retina 2x, with filter to modify @2x extension
+* changed: nextcellent thumbs are optimized on creation, no need to manually optimize after upload
+* changed: API keys are masked as password fields
+* changed: debugging functions streamlined to reduce memory usage
+* updated: translator credits - huge THANK YOU to all of them!
+* fixed: errant tool warnings for cloud users in nextgen and flagallery
+* fixed: regression with alt webp rewriting introduced in 2.4.4 that caused duplicate <html> and <head> tags in some cases
+* fixed: url replacement when restoring original for a converted image
 
 = 2.4.7 =
 * fixed: defer nextgen loading until 'init' to prevent activation/upgrade problems
@@ -677,6 +694,6 @@ https://developers.google.com/speed/docs/insights/OptimizeImages
 
 == Contact and Credits ==
 
-Written by [Shane Bishop](https://ewww.io). Based upon CW Image Optimizer, which was written by [Jacob Allred](http://www.jacoballred.com/) at [Corban Works, LLC](http://www.corbanworks.com/). CW Image Optimizer was based on WP Smush.it.
-[Hammer](http://thenounproject.com/noun/hammer/#icon-No1306) designed by [John Caserta](http://thenounproject.com/johncaserta) from The Noun Project.
+Written by [Shane Bishop](https://ewww.io). Based upon CW Image Optimizer, which was written by [Jacob Allred](http://www.jacoballred.com/) at [Corban Works, LLC](http://www.corbanworks.com/). CW Image Optimizer was based on WP Smush.it.  
+[Hammer](http://thenounproject.com/noun/hammer/#icon-No1306) designed by [John Caserta](http://thenounproject.com/johncaserta) from The Noun Project.  
 [Images](http://thenounproject.com/noun/images/#icon-No22772) designed by [Simon Henrotte](http://thenounproject.com/Gizmodesbois) from The Noun Project.
