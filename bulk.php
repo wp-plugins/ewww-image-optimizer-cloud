@@ -113,11 +113,11 @@ function ewww_image_optimizer_count_optimized( $gallery, $return_ids = false ) {
 					if (empty($meta)) {
 						continue;
 					}
-					if (empty($meta['ewww_image_optimizer'])) {
+					if ( empty( $meta['ewww_image_optimizer'] ) ) {
 						$unoptimized_full++;
 						$ids[] = $attachment[1];
 					}
-					if ( preg_match( '/' . __('License exceeded', EWWW_IMAGE_OPTIMIZER_DOMAIN) . '/', $meta['ewww_image_optimizer'] ) ) {
+					if ( ! empty( $meta['ewww_image_optimizer'] ) && preg_match( '/' . __('License exceeded', EWWW_IMAGE_OPTIMIZER_DOMAIN) . '/', $meta['ewww_image_optimizer'] ) ) {
 						$unoptimized_full++;
 						$ids[] = $attachment[1];
 					}
@@ -293,11 +293,11 @@ function ewww_image_optimizer_bulk_script( $hook ) {
 	// check the 'bulk resume' option
 	$resume = get_option('ewww_image_optimizer_bulk_resume');
 	// see if we were given attachment IDs to work with via GET/POST
-        if (!empty($_REQUEST['ids'])) {
-		$ids = explode(',', $_REQUEST['ids']);
-		ewwwio_debug_message( "gallery ids: " . print_r($ids, true) );
-		ewwwio_debug_message( "post_type: " . get_post_type($ids[0]) );
-		if ('ims_gallery' == get_post_type($ids[0])) {
+        if ( ! empty( $_REQUEST['ids'] ) ) {
+		$ids = explode( ',', $_REQUEST['ids'] );
+		ewwwio_debug_message( "gallery ids: " . print_r( $ids, true ) );
+		ewwwio_debug_message( "post_type: " . get_post_type( $ids[0] ) );
+		if ('ims_gallery' == get_post_type( $ids[0] ) ) {
 			$attachments = array();
 			foreach ($ids as $gid) {
 				ewwwio_debug_message( "gallery id: $gid" );
