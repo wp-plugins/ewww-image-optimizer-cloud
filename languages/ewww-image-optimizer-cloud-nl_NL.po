@@ -2,7 +2,7 @@
 # This file is distributed under the same license as the EWWW Image Optimizer package.
 msgid ""
 msgstr ""
-"PO-Revision-Date: 2015-07-31 19:13:58+0000\n"
+"PO-Revision-Date: 2015-08-19 11:01:45+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -12,15 +12,15 @@ msgstr ""
 
 #: common.php:3540
 msgid "Debugging Information"
-msgstr ""
+msgstr "Informatie over foutopsporing"
 
 #: common.php:3540
 msgid "Select All"
-msgstr ""
+msgstr "Selecteer Alles"
 
 #: ewww-image-optimizer.php:2092 ewww-image-optimizer.php:2111
 msgid "extraction of files failed"
-msgstr ""
+msgstr "Uitpakken bestanden mislukt"
 
 #: common.php:2659
 msgid "Azure Storage image"
@@ -32,7 +32,7 @@ msgstr "Amazon S3 afbeelding"
 
 #: common.php:3401
 msgid "Deferred Optimization"
-msgstr "Uitgestelde optimalizatie"
+msgstr "Uitgestelde optimalisatie"
 
 #: common.php:3401
 msgid "Optimize images later via wp_cron, after image upload or generation is complete."

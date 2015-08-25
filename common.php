@@ -5,6 +5,7 @@ define( 'EWWW_IMAGE_OPTIMIZER_VERSION', '250.2' );
 
 // TODO: get rid of the Cheatin' Eh? messages and just say Permission denied
 // TODO: escape all html attributes properly, with esc_attr() or esc_attr__()
+// TODO: make good use of ewww_image_optimizer_filesize() 
 
 // initialize a couple globals
 $ewww_debug = '';
@@ -905,8 +906,8 @@ function ewww_image_optimizer_defer() {
 		}
 		ewww_image_optimizer_remove_deferred_attachment( $image );
 		ewww_image_optimizer_debug_log();
-		if (!empty($delay)) {
-			sleep($delay);
+		if ( ! empty( $delay ) ) {
+			sleep( $delay );
 		}
 	}
 	ewwwio_memory( __FUNCTION__ );
@@ -1302,6 +1303,18 @@ function ewww_image_optimizer_jpg_quality ($quality = null) {
 		// send back nothing
 		ewwwio_memory( __FUNCTION__ );
 		return NULL;
+	}
+}
+
+// check filesize, and prevent errors by ensuring file exists, and that the cache has been cleared
+function ewww_image_optimizer_filesize( $file ) {
+	if ( is_file( $file ) ) {
+		// flush the cache for filesize
+		clearstatcache();
+		// find out the size of the new PNG file
+		return filesize( $file );
+	} else {
+		return 0;
 	}
 }
 
