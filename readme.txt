@@ -3,7 +3,7 @@ Contributors: nosilver4u
 Tags: images, image, attachments, attachment, optimize, optimization, lossless, photos, photo, picture, pictures, seo, compression, image editor, gmagick, cloud, wp-cli
 Requires at least: 3.5
 Tested up to: 4.3
-Stable tag: 2.5.0
+Stable tag: 2.5.1
 License: GPLv3
 
 Reduce file sizes for images within WordPress including NextGEN, GRAND FlAGallery and more via paid cloud service.
@@ -109,6 +109,19 @@ https://developers.google.com/speed/docs/best-practices/payload#CompressImages
 https://developers.google.com/speed/docs/insights/OptimizeImages  
 
 == Changelog ==
+
+= 2.5.1 =
+* added: Portuguese (Portugal) translation for pt_PT thanks to Celso Azevedo
+* added: optimization for custom sizes for "Fraction" theme
+* added: filter to override restrictions for Folders to Optimize
+* fixed: bulk delay was ignored when processing deferred images
+* fixed: notices when scanning media library to load Bulk Optimize page
+* fixed: tooltip text was not escaped properly for one-click conversion links
+* fixed: warning when deferred optimization runs and there is nothing available to optimize
+* fixed: error when bulk optimizing and w3_upload_info() function is missing
+* fixed: error when passing empty value to json_encode()
+* fixed: error on Unoptimized Images when bulk optimization resume flag is set, but no attachments are left
+* fixed: Unoptimized Images will scan entire library when bulk optimization resume flag is set, instead of just remaining attachments
 
 = 2.5.0 =
 * deprecated: Disable Automatic Optimization and Include Media Folders options: will be removed from the UI in 2.6 but remain functional if enabled

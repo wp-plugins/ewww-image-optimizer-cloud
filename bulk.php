@@ -97,11 +97,13 @@ function ewww_image_optimizer_count_optimized( $gallery, $return_ids = false ) {
 				ewwwio_debug_message( 'we have preloaded attachment ids' );
 				// retrieve the attachment IDs that were pre-loaded in the database
 				$attachment_ids = get_option( 'ewww_image_optimizer_bulk_attachments' );
-				while ( $attachment_ids && $attachment_query_count < $max_query ) {
-					$attachment_query .= "'" . array_pop( $attachment_ids ) . "',";
-					$attachment_query_count++;
+				if ( ! empty( $attachment_ids ) ) {
+					while ( $attachment_ids && $attachment_query_count < $max_query ) {
+						$attachment_query .= "'" . array_pop( $attachment_ids ) . "',";
+						$attachment_query_count++;
+					}
+					$attachment_query = 'AND metas.post_id IN (' . substr( $attachment_query, 0, -1 ) . ')';
 				}
-				$attachment_query = 'AND metas.post_id IN (' . substr( $attachment_query, 0, -1 ) . ')';
 			}
 			$offset = 0;
 			// retrieve all the image attachment metadata from the database
@@ -383,7 +385,7 @@ function ewww_image_optimizer_bulk_initialize() {
 	// verify that an authorized user has started the optimizer
 	$permissions = apply_filters( 'ewww_image_optimizer_bulk_permissions', '' );
 	if ( ! wp_verify_nonce( $_REQUEST['ewww_wpnonce'], 'ewww-image-optimizer-bulk' ) || ! current_user_can( $permissions ) ) {
-		wp_die(__('Cheatin&#8217; eh?', EWWW_IMAGE_OPTIMIZER_DOMAIN));
+		wp_die( __( 'Access denied.', EWWW_IMAGE_OPTIMIZER_DOMAIN ) );
 	} 
 	// update the 'bulk resume' option to show that an operation is in progress
 	update_option('ewww_image_optimizer_bulk_resume', 'true');
@@ -400,7 +402,7 @@ function ewww_image_optimizer_bulk_filename() {
 	// verify that an authorized user has started the optimizer
 	$permissions = apply_filters( 'ewww_image_optimizer_bulk_permissions', '' );
 	if ( ! wp_verify_nonce( $_REQUEST['ewww_wpnonce'], 'ewww-image-optimizer-bulk' ) || ! current_user_can( $permissions ) ) {
-		wp_die( __( 'Cheatin&#8217; eh?', EWWW_IMAGE_OPTIMIZER_DOMAIN ) );
+		wp_die( __( 'Access token has expired, please reload the page.', EWWW_IMAGE_OPTIMIZER_DOMAIN ) );
 	}
 	// get the attachment ID of the current attachment
 	$attachment_ID = $_POST['ewww_attachment'];
@@ -424,7 +426,7 @@ function ewww_image_optimizer_bulk_loop() {
 	// verify that an authorized user has started the optimizer
 	$permissions = apply_filters( 'ewww_image_optimizer_bulk_permissions', '' );
 	if ( ! wp_verify_nonce( $_REQUEST['ewww_wpnonce'], 'ewww-image-optimizer-bulk' ) || ! current_user_can( $permissions ) ) {
-		wp_die( __( 'Cheatin&#8217; eh?', EWWW_IMAGE_OPTIMIZER_DOMAIN ) );
+		wp_die( __( 'Access token has expired, please reload the page.', EWWW_IMAGE_OPTIMIZER_DOMAIN ) );
 	} 
 	if ( ! empty( $_REQUEST['ewww_sleep'] ) ) {
 		sleep( $_REQUEST['ewww_sleep'] );
@@ -491,7 +493,7 @@ function ewww_image_optimizer_bulk_cleanup() {
 	// verify that an authorized user has started the optimizer
 	$permissions = apply_filters( 'ewww_image_optimizer_bulk_permissions', '' );
 	if ( ! wp_verify_nonce( $_REQUEST['ewww_wpnonce'], 'ewww-image-optimizer-bulk' ) || ! current_user_can( $permissions ) ) {
-		wp_die(__('Cheatin&#8217; eh?', EWWW_IMAGE_OPTIMIZER_DOMAIN));
+		wp_die( __( 'Access token has expired, please reload the page.', EWWW_IMAGE_OPTIMIZER_DOMAIN ) );
 	} 
 	// all done, so we can update the bulk options with empty values
 	update_option('ewww_image_optimizer_bulk_resume', '');
