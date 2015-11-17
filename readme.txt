@@ -2,8 +2,8 @@
 Contributors: nosilver4u
 Tags: images, image, attachments, attachment, optimize, optimization, lossless, photos, photo, picture, pictures, seo, compression, image editor, gmagick, cloud, wp-cli
 Requires at least: 3.5
-Tested up to: 4.3
-Stable tag: 2.5.1
+Tested up to: 4.3.1
+Stable tag: 2.5.3
 License: GPLv3
 
 Reduce file sizes for images within WordPress including NextGEN, GRAND FlAGallery and more via paid cloud service.
@@ -74,10 +74,14 @@ Uploads are automatically optimized. Look for Optimize under the Image Store (Ga
 1. *Optional* Visit the settings page to enable/disable specific tools and turn on advanced optimization features.
 1. Done!
 
-EWWW IO Installation and Configuration:
-[youtube http://www.youtube.com/watch?v=CLBjjcaJ2pw]
+EWWW IO - Cloud API Walkthrough
+[youtube https://www.youtube.com/watch?v=ii57FjHnSpI]
+EWWW IO - Converting Images
+[youtube https://www.youtube.com/watch?v=xAGtdv3vrYg]
+EWWW IO - WebP
+[youtube https://www.youtube.com/watch?v=OeYJgTy3D94]
 Using EWWW IO:
-[youtube http://www.youtube.com/watch?v=1AvyVeE4kUo]
+[youtube https://www.youtube.com/watch?v=uELM25v-qgU]
 
 == Frequently Asked Questions ==
 
@@ -109,6 +113,21 @@ https://developers.google.com/speed/docs/best-practices/payload#CompressImages
 https://developers.google.com/speed/docs/insights/OptimizeImages  
 
 == Changelog ==
+
+= 2.5.3 =
+* changed: French, Bulgarian, Romanian, German and Polish translations have been moved to language packs for auto-updating
+* fixed: wpdb call causes error during scheduled optimization
+* fixed: mismatched CN for SSL certs on cloud servers
+* added: Alt WebP Rewriting supports new srcset and sizes attributes in WordPress 4.4
+
+= 2.5.2 =
+* new: all our installation videos have been re-done so that they are up-to-date and answer some common questions
+* changed: much faster scanning for Scan & Optimize when ewwwio table is large
+* fixed: check WP_CONTENT_DIR setting if wp_upload_dir() is reporting the wrong upload directory
+* fixed: translations for fr_BE and uk (Ukrainian)
+* fixed: .htaccess installer for webp rules
+* fixed: alt webp rewriting gets stuck when <head> tag has a space: <head >
+* fixed: notice thrown when trying to call unregister_setting before any settings were actually registered for EWWW
 
 = 2.5.1 =
 * added: Portuguese (Portugal) translation for pt_PT thanks to Celso Azevedo
