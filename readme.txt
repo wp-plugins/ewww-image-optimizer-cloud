@@ -3,7 +3,7 @@ Contributors: nosilver4u
 Tags: images, image, attachments, attachment, optimize, optimization, lossless, photos, photo, picture, pictures, seo, compression, image editor, gmagick, cloud, wp-cli
 Requires at least: 3.5
 Tested up to: 4.3.1
-Stable tag: 2.5.3
+Stable tag: 2.5.4
 License: GPLv3
 
 Reduce file sizes for images within WordPress including NextGEN, GRAND FlAGallery and more via paid cloud service.
@@ -113,6 +113,12 @@ https://developers.google.com/speed/docs/best-practices/payload#CompressImages
 https://developers.google.com/speed/docs/insights/OptimizeImages  
 
 == Changelog ==
+
+= 2.5.4 =
+* changed: Remove metadata turned on by default, should not affect existing installations/upgrades
+* changed: Português and Español translations updated
+* fixed: notices from redefining constants
+* updated: pngquant, cwebp, and gifsicle updated for API users
 
 = 2.5.3 =
 * changed: French, Bulgarian, Romanian, German and Polish translations have been moved to language packs for auto-updating
@@ -711,6 +717,9 @@ https://developers.google.com/speed/docs/insights/OptimizeImages
 * First release (forked from CW Image Optimizer)
 
 == Upgrade Notice ==
+
+= 2.5.4 =
+* changed: Remove metadata turned on by default, should not affect existing installations/upgrades
 
 = 2.0.0 =
 * You must upgrade to this version before uploading JPG images in Wordpress 4.0 to avoid serious quality loss in your resizes
